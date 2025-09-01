@@ -17,7 +17,10 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.mohammadblh.Uber",
-      "permissions": ["CAMERA", "LOCATION"] 
+      "permissions": [
+        "CAMERA",
+        "LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +36,24 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      ["expo-font",
+        {
+          "fonts": ["./assets/fonts/Vazir.ttf"],
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Vazir",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/Vazir.ttff",
+                    "weight": 800
+                  }
+                ]
+              }
+            ]
+          }
         }
       ]
     ],
