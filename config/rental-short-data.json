@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "1.1",
+  "formId": "rental-short",
+  "title": "اجاره موردی",
+  "steps": [
+    {
+      "stepId": "step_1",
+      "stepNumber": 1,
+      "title": "انتخاب کارگاه",
+      "sections": [
+        {
+          "sectionId": "workshop_type",
+          "title": "نام کارگاه",
+          "placeholder": "نام کارگاه خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "کارگاه اول",
+            "کارگاه دوم",
+            "کارگاه سوم"
+          ],
+          "defaultValue": "کارگاه اول"
+        },
+        {
+          "sectionId": "دسته اول",
+          "title": "دسته اول",
+          "placeholder": "دسته اول خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "گزینه یک",
+            "گزینه ذو",
+            "گزینه سه"
+          ]
+        },
+        {
+          "sectionId": "دسته دوم",
+          "title": "دسته دوم",
+          "placeholder": "دسته دوم خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "گزینه یک",
+            "گزینه ذو",
+            "گزینه سه"
+          ]
+        }
+      ]
+    },
+    {
+      "stepId": "step_2",
+      "stepNumber": 2,
+      "title": "نوع کار",
+      "workTypeItem": ["بارگیری", "تخلیه", "نصب"],
+      "sections": {
+        "بارگیری": [
+            {
+                "sectionId": "وزن ",
+                "title": "وزن ",
+                "placeholder": "خیابان اصلی",
+                "type": 5,
+                "style": 1,
+                "color": "blue",
+                "defaultValue": true
+            },
+            {
+                "sectionId": "وزن بار",
+                "title": "وزن بار",
+                "placeholder": "خیابان اصلی",
+                "type": 5,
+                "style": 2,
+                "color": "blue",
+                "defaultValue": false
+            },
+            {
+                "sectionId": "payment_1",
+                "title": "پرداخت اول:",
+                "type": 4,
+                "style": 5,
+                "removable": true,
+                "fields": [
+                    {
+                    "fieldId": "percent",
+                    "title": "درصدپرداخت",
+                    "placeholder": "20%",
+                    "type": 4,
+                    "style": 1,
+                    "required": true,
+                    "options": [
+                        "10%","20%","30%","40%","50%","60%","70%","80%","90%","100%"
+                    ],
+                    "defaultValue": "20%"
+                    },
+                    {
+                    "fieldId": "grace_period",
+                    "title": "مهلت پرداخت",
+                    "placeholder": "بیش پرداخت",
+                    "type": 4,
+                    "style": 1,
+                    "required": true,
+                    "options": ["بیش پرداخت","۷ روز","۱۵ روز","۳۰ روز","۶۰ روز","۹۰ روز"],
+                    "defaultValue": "بیش پرداخت"
+                    },
+                    {
+                    "fieldId": "on_receipt",
+                    "title": "در صدور پرداخت",
+                    "placeholder": "وارد کنید...",
+                    "type": 5,
+                    "style": 1,
+                    "color": "yellow",
+                    "defaultValue": false
+                    }
+                ]
+            },
+            {
+                "sectionId": "crane_selection",
+                "title": "انتخاب جرثقیل:",
+                "placeholder": "نوع جرثقیل خود را انتخاب کنید.",
+                "type": 4,
+                "style": 2,
+                "required": false,
+                "options": ["جرثقیل ۲۰ تنی","جرثقیل ۳۰ تنی","جرثقیل ۵۰ تنی","جرثقیل ۷۰ تنی","جرثقیل ۱۰۰ تنی"],
+                "defaultValue": [],
+                "maxVisibleItems": 3
+            },
+            {
+                "sectionId": "description",
+                "title": "توضیحات:",
+                "placeholder": "توضیحات خود را ثبت کنید.",
+                "type": 1,
+                "style": 3,
+                "required": false,
+                "maxLength": 250,
+                "minHeight": 80,
+                "numberOfLines": 4,
+                "defaultValue": ""
+            },
+            {
+                "sectionId": "specialist_selection",
+                "title": "انتخاب جرثقیل توسط متخصص:",
+                "type": 5,
+                "style": 4,
+                "required": false,
+                "defaultValue": false
+            },
+            {
+                "sectionId": "crane_rating",
+                "title": "جرثقیل‌ها:",
+                "type": 4,
+                "style": 4,
+                "required": false,
+                "maxStars": 5,
+                "defaultValue": 0
+            },
+            {
+                "sectionId": "cancellation_reason",
+                "title": "دلیل لغو درخواست:",
+                "type": 4,
+                "style": 6,
+                "required": false,
+                "color" : "blue",
+                "isMulti": true,
+                "options": ["تاخیر در زمان حضور", "خرابی یا نقص فنی","رفتار نامناسب","عدم رعایت اصول ایمنی","اختلاف در مبلغ یا نحوهی پرداخت","عدم تطابق نوع جرثقیل","مشکلات مربوط به بیمه","آسیب به بار","تاخیر در شروع یا پایان کار","سایر"
+                ],
+                "defaultValue": null
+            }
+        ],
+        "تخلیه": [
+            {
+                "sectionId": "وزن ",
+                "title": "وزن ",
+                "placeholder": "خیابان اصلی",
+                "type": 5,
+                "style": 1,
+                "color": "black",
+                "defaultValue": true
+            },
+            {
+                "sectionId": "وزن بار",
+                "title": "وزن بار",
+                "placeholder": "خیابان اصلی",
+                "type": 5,
+                "style": 2,
+                "color": "black",
+                "defaultValue": false
+            },
+            {
+                "sectionId": "attachments",
+                "title": "آپلود فایل",
+                "description": "شما میتوانید تا حداکثر 20 مکاتبات قابل آپلود کنید.",
+                "type": 8,
+                "style": 1,
+                "required": false,
+                "size": 20,
+                "acceptedFormats": ["image/*", "application/pdf"],
+                "formatDescription": "فرمت پشتیبانی باید PDF باشد (حداکثر 800x400px)"
+            },
+            {
+                "sectionId": "time_duration",
+                "title": "مدت زمان:",
+                "label": "مدت زمان",
+                "placeholder": "۱۴۰۴/۰۹/۱۰ تا ۱۴۰۴/۰۹/۲۵",
+                "type": 7,
+                "style": 1,
+                "required": false,
+                "mode": "range",
+                "defaultValue": null
+            }
+        ],
+        "نصب": [
+            {
+                "sectionId": "وزن ",
+                "title": "وزن ",
+                "placeholder": "وزن",
+                "type": 5,
+                "style": 1,
+                "color": "yellow",
+                "defaultValue": true
+            },
+            {
+                "sectionId": "وزن بار",
+                "title": "وزن بار",
+                "placeholder": "خیابان اصلی",
+                "type": 5,
+                "style": 2,
+                "color": "yellow",
+                "defaultValue": false
+            },
+            {
+                "sectionId": "خیابان اصلی",
+                "title": "خیابان اصلی",
+                "placeholder": "خیابان اصلی",
+                "type": 5,
+                "style": 2,
+                "color": "yellow",
+                "defaultValue": false
+            },
+            {
+                "sectionId": "پنج تن",
+                "title": "پنج تن",
+                "placeholder": "خیابان اصلی",
+                "type": 5,
+                "style": 2,
+                "color": "yellow",
+                "defaultValue": false
+            }
+        ]
+      }
+    },
+    {
+      "stepId": "step_3",
+      "stepNumber": 3,
+      "title": "خدمات اضافی",
+      "sections": []
+    }
+  ]
+}

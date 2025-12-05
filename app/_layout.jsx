@@ -1,13 +1,31 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Text, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { api } from '../hooks/useApi';
 import { useFrameworkReady } from '../hooks/useFrameworkReady';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { user, loading, isFirstLaunch } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  const getForms = async () => {
+    const finger = await AsyncStorage.getItem('user_finger');
+    if (!finger) return;
+
+    const rentalShort = await api.forms(finger);
+    console.log('rentalShort>>>', rentalShort)
+    if (rentalShort)
+      await AsyncStorage.setItem('rentalShort', JSON.stringify(rentalShort));
+  }
 
   useEffect(() => {
     if (loading) return;
@@ -22,11 +40,18 @@ function RootLayoutNav() {
       router.replace('/auth/login');
     } else if (user && !inTabsGroup) {
       router.replace('/(tabs)');
+      getForms();
     }
   }, [user, loading, isFirstLaunch, segments]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_left',
+        animationDuration: 300,
+      }}
+    >
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="auth/login" />
       <Stack.Screen name="auth/signup" />
@@ -38,6 +63,24 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useFrameworkReady();
+
+  const [loaded, error] = useFonts({
+    'Dana': require('../assets/fonts/dana-regular.ttf'),
+  });
+
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    return null;
+  }
 
   return (
     <AuthProvider>

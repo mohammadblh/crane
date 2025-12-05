@@ -214,7 +214,7 @@ const CraneLoginScreen = () => {
             animation="fadeIn"
             duration={1000}
             delay={700}
-            style={tw`text-center text-sm text-gray-500 mb-10 font-vazir leading-6`}
+            style={[tw`text-center text-sm text-gray-500 mb-10 leading-6`, { fontFamily: 'Dana' }]}
           >
             برای مدیریت پروژه ها و حساب کاربری شوید.
           </Animatable.Text>
@@ -236,7 +236,7 @@ const CraneLoginScreen = () => {
             >
               <View style={tw`relative bg-white rounded-xl border border-gray-200 px-4 py-3.5`}>
                 <View style={tw`absolute -top-2.5 right-3 bg-white px-1 z-10`}>
-                  <Text style={tw`text-xs text-gray-700 font-vazir`}>
+                  <Text style={[tw`text-xs text-gray-700`, { fontFamily: 'Dana' }]}>
                     نام کاربری
                   </Text>
                 </View>
@@ -250,7 +250,7 @@ const CraneLoginScreen = () => {
                     </TouchableOpacity>
                   )}
                   <TextInput
-                    style={tw`flex-1 h-full text-base text-gray-800 text-right font-vazir`}
+                    style={[tw`flex-1 h-full text-base text-gray-800 text-right`, { fontFamily: 'Dana' }]}
                     placeholder="Mohammadzilaee"
                     placeholderTextColor="#9CA3AF"
                     value={username}
@@ -270,13 +270,13 @@ const CraneLoginScreen = () => {
             >
               <View style={tw`relative bg-white rounded-xl border border-gray-200 px-4 py-3.5`}>
                 <View style={tw`absolute -top-2.5 right-3 bg-white px-1 z-10`}>
-                  <Text style={tw`text-xs text-gray-700 font-vazir`}>
+                  <Text style={[tw`text-xs text-gray-700`, { fontFamily: 'Dana' }]}>
                     رمز عبور (شماره موبایل)
                   </Text>
                 </View>
                 <View style={tw`flex-row items-center h-12`}>
                   <TextInput
-                    style={tw`flex-1 h-full text-base text-gray-800 text-right font-vazir`}
+                    style={[tw`flex-1 h-full text-base text-gray-800 text-right`, { fontFamily: 'Dana' }]}
                     placeholder="۰۹۳۳۰۰۰۰۰۰۰"
                     placeholderTextColor="#9CA3AF"
                     value={password}
@@ -294,7 +294,7 @@ const CraneLoginScreen = () => {
               delay={1200}
             >
               <TouchableOpacity style={tw`items-center mb-8`}>
-                <Text style={tw`text-sm text-gray-500 font-vazir`}>
+                <Text style={[tw`text-sm text-gray-500`, { fontFamily: 'Dana' }]}>
                   رمز عبور خود را فراموش کرده ام
                 </Text>
               </TouchableOpacity>
@@ -304,7 +304,7 @@ const CraneLoginScreen = () => {
             {error ? (
               <Animatable.View animation="shake" duration={500}>
                 <View style={tw`bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4`}>
-                  <Text style={tw`text-red-600 text-sm text-center font-vazir`}>
+                  <Text style={[tw`text-red-600 text-sm text-center`, { fontFamily: 'Dana' }]}>
                     {error}
                   </Text>
                 </View>
@@ -330,7 +330,7 @@ const CraneLoginScreen = () => {
                 {isLoading ? (
                   <ActivityIndicator color="#1F2937" />
                 ) : (
-                  <Text style={tw`text-gray-900 text-base font-semibold font-vazir`}>
+                  <Text style={[tw`text-gray-900 text-base font-semibold`, { fontFamily: 'Dana' }]}>
                     ورود
                   </Text>
                 )}
@@ -344,7 +344,7 @@ const CraneLoginScreen = () => {
               delay={1400}
               style={tw`items-center pb-5`}
             >
-              <Text style={tw`text-sm text-gray-500 font-vazir`}>
+              <Text style={[tw`text-sm text-gray-500`, { fontFamily: 'Dana' }]}>
                 حساب کاربری ندارید؟ ثبت نام
               </Text>
             </Animatable.View>

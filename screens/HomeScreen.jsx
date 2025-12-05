@@ -21,17 +21,21 @@ const CraneRequestsScreen = () => {
 
   const handleLogout = async () => {
     try {
+      // Close modal first
+      setShowProfileModal(false);
+
+      // Wait a bit for modal to close
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // Clear user data from AsyncStorage
       await AsyncStorage.removeItem('user_finger');
       await AsyncStorage.removeItem('temp_username');
       await AsyncStorage.removeItem('temp_finger');
       await AsyncStorage.removeItem('temp_mobile');
+      await AsyncStorage.removeItem('user_data');
 
       // Clear auth context
-      await setUserData(null);
-
-      // Close modal
-      setShowProfileModal(false);
+      setUserData(null);
 
       // Navigate to login
       router.replace('/auth/login');
@@ -124,7 +128,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f8f8",
-    fontFamily: "Vazir",
+    fontFamily: "Dana",
   },
   header: {
     backgroundColor: "#ffffff",
@@ -148,7 +152,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#1F2937",
-    fontFamily: "Vazir",
+    fontFamily: "Dana",
   },
   avatarButton: {
     padding: 4,
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#9CA3AF",
     textAlign: "center",
-    fontFamily: "Vazir",
+    fontFamily: "Dana",
   },
   profileModalOverlay: {
     flex: 1,
@@ -216,7 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#1F2937",
     fontWeight: "500",
-    fontFamily: "Vazir",
+    fontFamily: "Dana",
   },
   logoutText: {
     color: "#DC2626",

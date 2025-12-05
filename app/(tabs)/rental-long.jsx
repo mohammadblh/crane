@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 20,
-        fontFamily: 'Vazir',
+        fontFamily: 'Dana',
         color: '#333',
     },
 });

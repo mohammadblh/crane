@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#6B7280",
         marginBottom: 40,
-        fontFamily: Platform.OS === "ios" ? "System" : "Vazir",
+        fontFamily: "Dana",
         lineHeight: 24,
     },
     otpSection: {
@@ -454,13 +454,13 @@ const styles = StyleSheet.create({
         color: "#1F2937",
         fontSize: 16,
         fontWeight: "600",
-        fontFamily: Platform.OS === "ios" ? "System" : "Vazir",
+        fontFamily: "Dana",
     },
     otpLabel: {
         fontSize: 14,
         color: "#3B82F6",
         textAlign: "center",
-        fontFamily: Platform.OS === "ios" ? "System" : "Vazir",
+        fontFamily: "Dana",
         textDecorationLine: "underline",
     },
     errorContainer: {
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#DC2626",
         textAlign: "center",
-        fontFamily: Platform.OS === "ios" ? "System" : "Vazir",
+        fontFamily: "Dana",
     },
     verifyButtonLoading: {
         opacity: 0.7,

@@ -107,8 +107,13 @@ export const AuthProvider = ({ children }) => {
 
   const setUserData = async (userData) => {
     try {
-      await AsyncStorage.setItem('user_data', JSON.stringify(userData));
-      setUser(userData);
+      if (userData === null) {
+        await AsyncStorage.removeItem('user_data');
+        setUser(null);
+      } else {
+        await AsyncStorage.setItem('user_data', JSON.stringify(userData));
+        setUser(userData);
+      }
     } catch (error) {
       console.error('Error setting user data:', error);
     }

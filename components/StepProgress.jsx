@@ -4,73 +4,67 @@ import tw from 'tailwind-react-native-classnames';
 import { Check } from 'lucide-react-native';
 
 export default function StepProgress({ currentStep }) {
+    const steps = [
+        { id: 1, title: 'مرحله اول' },
+        { id: 2, title: 'مرحله دوم' },
+        { id: 3, title: 'مرحله سوم' },
+    ];
+
     return (
-        <View style={tw`items-center justify-center mb-8`}>
-            <View style={tw`flex-row items-center`}>
-                {/* Step 1 */}
-                <View style={[
-                    tw`w-12 h-12 rounded-full border-2 items-center justify-center`,
-                    currentStep === 1 ? tw`border-yellow-500 bg-white` : (currentStep > 1 ? tw`border-yellow-500 bg-yellow-500` : tw`border-gray-300 bg-white`)
-                ]}>
-                    {currentStep > 1 ? (
-                        <Check size={24} color="white" strokeWidth={3} />
-                    ) : (
-                        <View style={[
-                            tw`w-3 h-3 rounded-full`,
-                            currentStep === 1 ? tw`bg-yellow-500` : tw`bg-gray-300`
-                        ]} />
+        <View style={tw`flex-row-reverse justify-center items-start mb-6 px-4`}>
+            {steps.map((step, index) => (
+                <React.Fragment key={step.id}>
+
+                    {/* Step Item */}
+                    <View style={tw`items-center w-16`}>
+                        <View
+                            style={[
+                                tw`w-10 h-10 rounded-full border-2 items-center justify-center mb-1`,
+                                currentStep === step.id
+                                    ? { borderColor: '#D19D00', backgroundColor: 'white' }
+                                    : currentStep > step.id
+                                        ? { borderColor: '#D19D00', backgroundColor: '#D19D00' }
+                                        : tw`border-gray-300 bg-white`
+                            ]}
+                        >
+                            {currentStep > step.id ? (
+                                <Check size={18} color="white" strokeWidth={3} />
+                            ) : (
+                                <View
+                                    style={[
+                                        tw`w-2.5 h-2.5 rounded-full`,
+                                        currentStep === step.id
+                                            ? { backgroundColor: '#D19D00' }
+                                            : tw`bg-gray-300`
+                                    ]}
+                                />
+                            )}
+                        </View>
+
+                        <Text
+                            style={[
+                                tw`text-xs text-center font-medium px-1`,
+                                currentStep >= step.id ? tw`text-gray-800` : tw`text-gray-400`,
+                                { color: "#D19D00" }
+                            ]}
+                        >
+                            {step.id === currentStep ? step.title : null}
+                        </Text>
+                    </View>
+
+                    {/* Connecting Line */}
+                    {index < steps.length - 1 && (
+                        <View
+                            style={[
+                                tw`w-8 h-0.5 mt-5`,
+                                currentStep > step.id
+                                    ? { backgroundColor: '#D19D00' }
+                                    : tw`bg-gray-300`
+                            ]}
+                        />
                     )}
-                </View>
-
-                <View style={[
-                    tw`w-16 h-0.5`,
-                    currentStep > 1 ? tw`bg-yellow-500` : tw`bg-gray-300`
-                ]} />
-
-                {/* Step 2 */}
-                <View style={[
-                    tw`w-12 h-12 rounded-full border-2 items-center justify-center`,
-                    currentStep === 2 ? tw`border-yellow-500 bg-white` : (currentStep > 2 ? tw`border-yellow-500 bg-yellow-500` : tw`border-gray-300 bg-white`)
-                ]}>
-                    {currentStep > 2 ? (
-                        <Check size={24} color="white" strokeWidth={3} />
-                    ) : (
-                        <View style={[
-                            tw`w-3 h-3 rounded-full`,
-                            currentStep === 2 ? tw`bg-yellow-500` : tw`bg-gray-300`
-                        ]} />
-                    )}
-                </View>
-
-                {/* Line 2 */}
-                <View style={[
-                    tw`w-16 h-0.5`,
-                    currentStep > 2 ? tw`bg-yellow-500` : tw`bg-gray-300`
-                ]} />
-
-                {/* Step 3 */}
-                <View style={[
-                    tw`w-12 h-12 rounded-full border-2 items-center justify-center`,
-                    currentStep === 3 ? tw`border-yellow-500 bg-white` : (currentStep > 3 ? tw`border-yellow-500 bg-yellow-500` : tw`border-gray-300 bg-white`)
-                ]}>
-                    {currentStep > 3 ? (
-                        <Check size={24} color="white" strokeWidth={3} />
-                    ) : (
-                        <View style={[
-                            tw`w-3 h-3 rounded-full`,
-                            currentStep === 3 ? tw`bg-yellow-500` : tw`bg-gray-300`
-                        ]} />
-                    )}
-                </View>
-            </View>
-
-            <View style={tw`mt-4`}>
-                <Text style={tw`text-yellow-600 font-bold text-base`}>
-                    {currentStep === 1 && 'مرحله اول'}
-                    {currentStep === 2 && 'مرحله دوم'}
-                    {currentStep === 3 && 'مرحله سوم'}
-                </Text>
-            </View>
+                </React.Fragment>
+            ))}
         </View>
     );
 }

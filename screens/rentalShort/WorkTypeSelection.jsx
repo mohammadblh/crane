@@ -2,11 +2,32 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 import { Check, ChevronDown, Trash2 } from 'lucide-react-native';
+import AddWorkScreen from '../../screens/rentalShort/AddWork';
 
-export default function WorkTypeSelection({ onNext, onPrev, onAddWork, workItems = [], onRemoveItem }) {
+export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRemoveItem }) {
     const [showModal, setShowModal] = useState(false);
     const [selectedWorkType, setSelectedWorkType] = useState('loading'); // Default to loading
     const [expandedCard, setExpandedCard] = useState(null);
+    const [showAddWork, setShowAddWork] = useState(null);
+
+    // const handleAddNewItem = (data) => {
+    //     // setPendingWorkType(type);
+    //     // setShowAddWork(true);
+    //     console.log('handleAddWorkStart::data', data)
+    //     // setWorkItems()
+    // };
+
+
+    // if (showAddWork) {
+    //     return (
+    //         <AddWorkScreen
+    //             onBack={() => setShowAddWork(false)}
+    //             onSubmit={handleAddNewItem}
+    //             items={jsonComp.sections}
+    //             addWorkName={showAddWork}
+    //         />
+    //     );
+    // }
 
     return (
         <View style={tw`px-4`}>
@@ -52,35 +73,16 @@ export default function WorkTypeSelection({ onNext, onPrev, onAddWork, workItems
             ))}
 
             {/* Add Work Button */}
-            <TouchableOpacity
-                style={tw`bg-yellow-500 py-3 rounded-lg shadow-lg mb-4`}
-                activeOpacity={0.8}
-                onPress={() => setShowModal(true)}
-            >
-                <Text style={tw`text-gray-900 font-bold text-center text-base`}>
-                    افزودن کار
-                </Text>
-            </TouchableOpacity>
-
-            {/* Bottom Buttons */}
-            <View style={tw`flex-row pb-6 pt-2`}>
+            <View style={tw`m-auto top-full`}>
+                <Text style={tw`text-xl text-center font-bold mb-1`}>هیچ نوع کاری وجود ندارد</Text>
+                <Text style={tw`text-center mb-4`}>نوع کار مورد نظر خود را از دکمه زیر اضافه کنید</Text>
                 <TouchableOpacity
-                    style={tw`flex-1 bg-yellow-500 py-3 rounded-lg ml-2`}
+                    style={tw`bg-yellow-500 py-3 rounded-lg shadow-lg mb-4`}
                     activeOpacity={0.8}
-                    onPress={onNext}
+                    onPress={() => setShowModal(true)}
                 >
                     <Text style={tw`text-gray-900 font-bold text-center text-base`}>
-                        مرحله بعدی
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={tw`flex-1 border-2 border-gray-300 bg-white py-3 rounded-lg mr-2`}
-                    activeOpacity={0.8}
-                    onPress={onPrev}
-                >
-                    <Text style={tw`text-gray-700 font-bold text-center text-base`}>
-                        مرحله قبلی
+                        افزودن کار
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -103,41 +105,20 @@ export default function WorkTypeSelection({ onNext, onPrev, onAddWork, workItems
 
                         {/* Radio Options */}
                         <View style={tw`mb-6`}>
-                            <TouchableOpacity
-                                style={tw`flex-row items-center justify-between py-3 border-b border-gray-100`}
-                                onPress={() => setSelectedWorkType('loading')}
-                            >
-                                <View style={tw`w-6 h-6 rounded-full border-2 ${selectedWorkType === 'loading' ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'} items-center justify-center`}>
-                                    {selectedWorkType === 'loading' && (
-                                        <Check size={16} color="white" strokeWidth={3} />
-                                    )}
-                                </View>
-                                <Text style={tw`text-gray-700 text-base flex-1 text-right mr-4`}>بارگیری</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={tw`flex-row items-center justify-between py-4 border-b border-gray-100`}
-                                onPress={() => setSelectedWorkType('unloading')}
-                            >
-                                <View style={tw`w-6 h-6 rounded-full border-2 ${selectedWorkType === 'unloading' ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'} items-center justify-center`}>
-                                    {selectedWorkType === 'unloading' && (
-                                        <Check size={16} color="white" strokeWidth={3} />
-                                    )}
-                                </View>
-                                <Text style={tw`text-gray-700 text-base flex-1 text-right mr-4`}>تخلیه</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={tw`flex-row items-center justify-between py-4`}
-                                onPress={() => setSelectedWorkType('installation')}
-                            >
-                                <View style={tw`w-6 h-6 rounded-full border-2 ${selectedWorkType === 'installation' ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'} items-center justify-center`}>
-                                    {selectedWorkType === 'installation' && (
-                                        <Check size={16} color="white" strokeWidth={3} />
-                                    )}
-                                </View>
-                                <Text style={tw`text-gray-700 text-base flex-1 text-right mr-4`}>نصب</Text>
-                            </TouchableOpacity>
+                            {jsonComp.workTypeItem.map((item, key) => (
+                                <TouchableOpacity
+                                    key={key}
+                                    style={tw`flex-row items-center justify-between py-3 border-b border-gray-100`}
+                                    onPress={() => setSelectedWorkType(item)}
+                                >
+                                    <View style={tw`w-6 h-6 rounded-full border-2 ${selectedWorkType === item ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'} items-center justify-center`}>
+                                        {selectedWorkType === item && (
+                                            <Check size={16} color="white" strokeWidth={3} />
+                                        )}
+                                    </View>
+                                    <Text style={tw`text-gray-700 text-base flex-1 text-right mr-4`}>{item}</Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
 
                         {/* Confirm Button */}
@@ -146,6 +127,7 @@ export default function WorkTypeSelection({ onNext, onPrev, onAddWork, workItems
                             activeOpacity={0.8}
                             onPress={() => {
                                 setShowModal(false);
+                                // setShowAddWork(selectedWorkType);
                                 if (onAddWork) onAddWork(selectedWorkType);
                             }}
                         >

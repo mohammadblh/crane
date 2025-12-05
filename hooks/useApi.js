@@ -130,10 +130,14 @@ export const api = {
   }),
 
   // دریافت فرم
-  forms: (fingerData, time) => sendRequest('m_forms', {
-    finger: fingerData,
-    time
-  }),
+  forms: async (finger) => {
+    if (DEV_MODE) {
+      return mockDelay(MOCK_DATA.form);
+    }
+    return sendRequest('m_forms', {
+      finger
+    });
+  },
 
   // دریافت فرم
   news: (fingerData, time) => sendRequest('m_news', {

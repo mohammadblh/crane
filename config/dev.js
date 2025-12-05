@@ -1,12 +1,13 @@
 // Development Configuration
 // تنظیمات توسعه - برای تست بدون سرور
-
+import rentalShort from './rental-short-data.json'
 /**
  * حالت توسعه (Development Mode)
  * true = استفاده از داده‌های فیک (بدون نیاز به سرور)
  * false = استفاده از API واقعی
  */
 export const DEV_MODE = true;
+
 
 /**
  * داده‌های فیک برای تست
@@ -47,6 +48,11 @@ export const MOCK_DATA = {
       avatar: null,
     },
   },
+
+  form: {
+    success: true,
+    data: rentalShort
+  }
 };
 
 /**

@@ -34,7 +34,7 @@ export default function TabLayout() {
           fontSize: 11,
           fontWeight: '700',
           marginTop: 4,
-          fontFamily: Platform.OS === 'ios' ? 'System' : 'Vazir',
+          fontFamily: 'Dana',
         },
         tabBarItemStyle: {
           paddingVertical: 4,

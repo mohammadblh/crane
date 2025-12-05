@@ -5,11 +5,14 @@ import {
     TouchableOpacity,
     ScrollView,
     StatusBar,
+    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ArrowRight } from 'lucide-react-native';
 import tw from 'tailwind-react-native-classnames';
 import { useNavigation, useRouter, useFocusEffect } from 'expo-router';
+import Loading from '../../components/Loading';
 import StepProgress from '../../components/StepProgress';
 import WorkshopSelection from '../../screens/rentalShort/WorkshopSelection';
 import WorkTypeSelection from '../../screens/rentalShort/WorkTypeSelection';
@@ -18,29 +21,73 @@ import AddWorkScreen from '../../screens/rentalShort/AddWork';
 
 export default function RentalShortScreen() {
     const [currentStep, setCurrentStep] = useState(1);
-    const [showAddWork, setShowAddWork] = useState(false);
+    const [showAddWork, setShowAddWork] = useState(null);
+    const [nextDisabled, setNextDisabled] = useState(false);
+    const [rentalShort, setRentalShort] = useState(null);
     const [workItems, setWorkItems] = useState([]);
     const [pendingWorkType, setPendingWorkType] = useState(null);
+    const [previousStep, setPreviousStep] = useState(1);
+
+    const [formData, setFormData] = useState({
+        workshopName: '', cat1: '', cat2: '',
+        works: []
+    });
 
     const navigation = useNavigation();
     const router = useRouter();
+    const rentalShortRef = useRef(null);
     const scrollViewRef = useRef(null);
+    const slideAnimation = useRef(new Animated.Value(0)).current;
 
     // Reset state when screen comes into focus
     useFocusEffect(
         useCallback(() => {
             setCurrentStep(1);
-            setShowAddWork(false);
+            setShowAddWork(null);
             // Optional: Reset workItems if you want a fresh start every time
             // setWorkItems([]); 
         }, [])
     );
+
+    // get fields
+    useEffect(() => {
+        const loadData = async () => {
+            let res = await AsyncStorage.getItem('rentalShort');
+            res = JSON.parse(res);
+
+            if (res)
+                setRentalShort(res.data);
+        };
+        loadData();
+    }, []);
+
+    // Animate step transitions
+    useEffect(() => {
+        if (currentStep !== previousStep) {
+            // Determine direction: if moving forward (next), slide from left to right
+            // if moving backward (prev), slide from right to left
+            const isMovingForward = currentStep > previousStep;
+            const startValue = isMovingForward ? -300 : 300; // LTR for next, RTL for prev
+
+            slideAnimation.setValue(startValue);
+
+            Animated.timing(slideAnimation, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+
+            setPreviousStep(currentStep);
+        }
+    }, [currentStep, previousStep]);
 
     // Scroll to top when step changes
     useEffect(() => {
         if (scrollViewRef.current) {
             scrollViewRef.current.scrollTo({ y: 0, animated: true });
         }
+        if (!formData.works.length && currentStep !== 1) setNextDisabled(true)
+        if (formData.works.length || currentStep === 1) setNextDisabled(false);
     }, [currentStep]);
 
     // Hide tab bar when in this screen
@@ -81,21 +128,26 @@ export default function RentalShortScreen() {
     };
 
     const handleAddWorkStart = (type) => {
+        console.log('type handle add work:', type)
         setPendingWorkType(type);
-        setShowAddWork(true);
+        setShowAddWork(type);
     };
 
     const handleAddNewItem = (data) => {
+        console.log('handleAddNewItem data:', data);
         const newItem = {
             id: Date.now(),
             title: getTitleForType(pendingWorkType, workItems.length + 1),
-            type: pendingWorkType, // 'installation', 'loading', 'unloading'
-            ...data,
-            // Determine colors based on type
+            type: pendingWorkType,
+            formData: data,
             ...getColorsForType(pendingWorkType)
         };
 
         setWorkItems([...workItems, newItem]);
+        setFormData(prev => ({
+            ...prev,
+            works: [...(prev.works || []), newItem]
+        }));
         setShowAddWork(false);
         setPendingWorkType(null);
     };
@@ -106,20 +158,20 @@ export default function RentalShortScreen() {
 
     const getTitleForType = (type, index) => {
         switch (type) {
-            case 'installation': return `نصب شماره ${index}`; // This numbering might need to be per-type
-            case 'loading': return `بارگیری شماره ${index}`;
-            case 'unloading': return `تخلیه شماره ${index}`;
-            default: return `آیتم شماره ${index}`;
+            case 'نصب': return `نصب شماره ${index}`;
+            case 'بارگیری': return `بارگیری شماره ${index}`;
+            case 'تخلیه': return `تخلیه شماره ${index}`;
+            default: return `${type} شماره ${index}`;
         }
     };
 
     const getColorsForType = (type) => {
         switch (type) {
-            case 'installation':
+            case 'نصب':
                 return { color: 'yellow', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-300' };
-            case 'loading':
+            case 'بارگیری':
                 return { color: 'blue', bgColor: 'bg-blue-50', borderColor: 'border-blue-300' };
-            case 'unloading':
+            case 'تخلیه':
                 return { color: 'green', bgColor: 'bg-green-50', borderColor: 'border-green-300' };
             default:
                 return { color: 'gray', bgColor: 'bg-gray-50', borderColor: 'border-gray-300' };
@@ -136,17 +188,26 @@ export default function RentalShortScreen() {
     };
 
     if (showAddWork) {
-        return (
-            <AddWorkScreen
-                onBack={() => setShowAddWork(false)}
-                onSubmit={handleAddNewItem}
-                workType={pendingWorkType}
-            />
-        );
+        const items = rentalShort.steps[1].sections;
+        // const items = rentalShort.steps[1].sections[showAddWork];
+        if (items && items[showAddWork] && items[showAddWork].length)
+            return (
+                <AddWorkScreen
+                    onBack={() => setShowAddWork(false)}
+                    onSubmit={handleAddNewItem}
+                    items={items[showAddWork]}
+                    addWorkName={showAddWork}
+                // workType={pendingWorkType}
+                />
+            );
     }
 
+
+    if (!rentalShort) return <Loading />;
+
+
     return (
-        <SafeAreaView style={tw`flex-1 bg-gray-50`} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={tw`flex-1 bg-white`} edges={['top', 'left', 'right']}>
             <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
 
             <ScrollView
@@ -157,39 +218,80 @@ export default function RentalShortScreen() {
             >
                 {/* Header */}
                 <View style={tw`bg-white border-b border-gray-200 px-4 py-4 flex-row items-center justify-between`}>
-                    <TouchableOpacity onPress={handleBack}>
-                        <ChevronRight size={24} color="#374151" />
-                    </TouchableOpacity>
+                    <View style={tw`w-6`} />
                     <Text style={tw`text-lg font-bold text-gray-800`}>
                         {getHeaderTitle()}
                     </Text>
-                    <View style={tw`w-6`} />
+                    <TouchableOpacity onPress={handleBack}>
+                        <ArrowRight size={24} color="#374151" />
+                    </TouchableOpacity>
                 </View>
 
-                <View style={tw`py-6`}>
+                <View style={tw`h-full mt-6 mb-6`}>
                     {/* Progress Steps */}
                     <StepProgress currentStep={currentStep} />
 
-                    {/* Step Content */}
-                    {currentStep === 1 && (
-                        <WorkshopSelection onNext={handleNext} />
-                    )}
+                    {/* Step Content with Animation */}
+                    <Animated.View
+                        style={{
+                            transform: [{ translateX: slideAnimation }],
+                        }}
+                    >
+                        {currentStep === 1 && (
+                            <WorkshopSelection jsonComp={rentalShort.steps[0]} />
+                        )}
 
-                    {currentStep === 2 && (
-                        <WorkTypeSelection
-                            onNext={handleNext}
-                            onPrev={handlePrev}
-                            onAddWork={handleAddWorkStart}
-                            workItems={workItems}
-                            onRemoveItem={handleRemoveItem}
-                        />
-                    )}
+                        {currentStep === 2 && (
+                            <WorkTypeSelection
+                                onAddWork={handleAddWorkStart}
+                                workItems={workItems}
+                                jsonComp={rentalShort.steps[1]}
+                                onRemoveItem={handleRemoveItem}
+                            />
+                        )}
 
-                    {currentStep === 3 && (
-                        <AdditionalServicesSelection onNext={handleNext} onPrev={handlePrev} />
-                    )}
+                        {currentStep === 3 && (
+                            <AdditionalServicesSelection onNext={handleNext} onPrev={handlePrev} />
+                        )}
+                    </Animated.View>
                 </View>
             </ScrollView>
+
+            {/* دکمه ثابت در پایین صفحه */}
+            <View
+                style={tw`absolute flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`}
+            >
+                {currentStep === 3 ? <TouchableOpacity
+                    style={tw`flex-1 bg-yellow-500 py-3 rounded-lg shadow-lg`}
+                    onPress={handleNext}
+                >
+                    <Text style={tw`text-gray-900 font-bold text-base text-center`}>
+                        ثبت سفارش
+                    </Text>
+                </TouchableOpacity> :
+                    <TouchableOpacity
+                        style={[
+                            tw`flex-1 bg-yellow-500 py-3 rounded-lg shadow-lg`,
+                            nextDisabled && tw`bg-gray-300`
+                        ]}
+                        onPress={handleNext}
+                        disabled={nextDisabled}
+                    >
+                        <Text style={tw`text-gray-900 font-bold text-base text-center`}>
+                            مرحله بعدی
+                        </Text>
+                    </TouchableOpacity>
+                }
+                {currentStep !== 1 && <TouchableOpacity
+                    style={tw`flex-1 border-gray-300 bg-white py-3 rounded-lg mr-2`}
+                    activeOpacity={0.8}
+                    onPress={handlePrev}
+                >
+                    <Text style={tw`text-gray-700 font-bold text-center text-base`}>
+                        مرحله قبلی
+                    </Text>
+                </TouchableOpacity>}
+            </View>
         </SafeAreaView>
     );
 }
