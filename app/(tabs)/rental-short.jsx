@@ -33,6 +33,8 @@ export default function RentalShortScreen() {
         works: []
     });
 
+    console.log('workItems', workItems)
+
     const navigation = useNavigation();
     const router = useRouter();
     const rentalShortRef = useRef(null);
@@ -49,14 +51,26 @@ export default function RentalShortScreen() {
         }, [])
     );
 
-    // get fields
+    // get fields and load workItems from AsyncStorage
     useEffect(() => {
         const loadData = async () => {
+            // Load rental short data
             let res = await AsyncStorage.getItem('rentalShort');
             res = JSON.parse(res);
 
             if (res)
                 setRentalShort(res.data);
+
+            // Load workItems from AsyncStorage
+            const savedWorkItems = await AsyncStorage.getItem('workItems');
+            if (savedWorkItems) {
+                const parsedWorkItems = JSON.parse(savedWorkItems);
+                setWorkItems(parsedWorkItems);
+                setFormData(prev => ({
+                    ...prev,
+                    works: parsedWorkItems
+                }));
+            }
         };
         loadData();
     }, []);
@@ -86,9 +100,18 @@ export default function RentalShortScreen() {
         if (scrollViewRef.current) {
             scrollViewRef.current.scrollTo({ y: 0, animated: true });
         }
-        if (!formData.works.length && currentStep !== 1) setNextDisabled(true)
-        if (formData.works.length || currentStep === 1) setNextDisabled(false);
     }, [currentStep]);
+
+    // Check workItems to enable/disable next button
+    useEffect(() => {
+        if (currentStep === 2) {
+            // At step 2 (work type selection), need at least one work item
+            setNextDisabled(workItems.length === 0);
+        } else {
+            // Other steps can proceed
+            setNextDisabled(false);
+        }
+    }, [workItems, currentStep]);
 
     // Hide tab bar when in this screen
     useLayoutEffect(() => {
@@ -133,7 +156,7 @@ export default function RentalShortScreen() {
         setShowAddWork(type);
     };
 
-    const handleAddNewItem = (data) => {
+    const handleAddNewItem = async (data) => {
         console.log('handleAddNewItem data:', data);
         const newItem = {
             id: Date.now(),
@@ -143,17 +166,30 @@ export default function RentalShortScreen() {
             ...getColorsForType(pendingWorkType)
         };
 
-        setWorkItems([...workItems, newItem]);
+        const updatedWorkItems = [...workItems, newItem];
+        setWorkItems(updatedWorkItems);
         setFormData(prev => ({
             ...prev,
-            works: [...(prev.works || []), newItem]
+            works: updatedWorkItems
         }));
+
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('workItems', JSON.stringify(updatedWorkItems));
+
         setShowAddWork(false);
         setPendingWorkType(null);
     };
 
-    const handleRemoveItem = (id) => {
-        setWorkItems(workItems.filter(item => item.id !== id));
+    const handleRemoveItem = async (id) => {
+        const updatedWorkItems = workItems.filter(item => item.id !== id);
+        setWorkItems(updatedWorkItems);
+        setFormData(prev => ({
+            ...prev,
+            works: updatedWorkItems
+        }));
+
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('workItems', JSON.stringify(updatedWorkItems));
     };
 
     const getTitleForType = (type, index) => {

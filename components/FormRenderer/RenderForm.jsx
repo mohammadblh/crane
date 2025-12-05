@@ -6,6 +6,7 @@ import SelectRender from './SelectRender';
 import CheckboxRender from './CheckboxRender';
 import FileUpload from '../inputs/File/FileUpload';
 import DatePickerComponent from '../inputs/Date/DatePickerComponent';
+import MapView from '../inputs/Map/MapView';
 
 export default function RenderForm({ data, onChange }) {
   const [formData, setFormData] = useState({});
@@ -77,6 +78,15 @@ export default function RenderForm({ data, onChange }) {
           value={formData[field.sectionId]}
           onChange={(value) => handleFieldChange(field.sectionId, value)}
         />
+
+      case 10: // Map
+        return (
+          <MapView
+            field={field}
+            value={formData[field.sectionId]}
+            onChange={(value) => handleFieldChange(field.sectionId, value)}
+          />
+        );
 
       default:
         return <Text>نوع پشتیبانی نشده: {field.type}</Text>;

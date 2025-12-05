@@ -33,6 +33,51 @@ const isLeapYear = (year) => {
     return breaks.some(breakPoint => yearInCycle === breakPoint);
 };
 
+// Convert Jalaali to Gregorian
+const jalaaliToGregorian = (jy, jm, jd) => {
+    const gy = jy + 621;
+    const gDayNo = 365 * gy + Math.floor((gy + 3) / 4) - Math.floor((gy + 99) / 100) + Math.floor((gy + 399) / 400) - 80;
+
+    let jDayNo = 365 * jy + Math.floor(jy / 33) * 8 + Math.floor(((jy % 33) + 3) / 4);
+    for (let i = 0; i < jm; i++) {
+        jDayNo += getDaysInMonth(jy, i + 1);
+    }
+    jDayNo += jd;
+
+    const totalDays = gDayNo + jDayNo;
+
+    let year = Math.floor((totalDays - 1) / 365.2425) + 1;
+    let dayOfYear = totalDays - (365 * year + Math.floor(year / 4) - Math.floor(year / 100) + Math.floor(year / 400));
+
+    while (dayOfYear <= 0) {
+        year--;
+        dayOfYear = totalDays - (365 * year + Math.floor(year / 4) - Math.floor(year / 100) + Math.floor(year / 400));
+    }
+
+    const monthDays = [31, (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    let month = 0;
+    for (let i = 0; i < 12; i++) {
+        if (dayOfYear <= monthDays[i]) {
+            month = i + 1;
+            break;
+        }
+        dayOfYear -= monthDays[i];
+    }
+
+    return { year, month, day: dayOfYear };
+};
+
+// Get day of week (0 = Saturday, 1 = Sunday, ..., 6 = Friday)
+const getDayOfWeek = (jy, jm, jd) => {
+    const g = jalaaliToGregorian(jy, jm, jd);
+    const date = new Date(g.year, g.month - 1, g.day);
+    const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+    // Convert to Persian week (0 = Saturday)
+    return (day + 1) % 7;
+};
+
+
 export default function DatePickerComponent2({ field, value, onChange }) {
     const [showPicker, setShowPicker] = useState(false);
     const [currentYear, setCurrentYear] = useState(1404);
@@ -109,8 +154,23 @@ export default function DatePickerComponent2({ field, value, onChange }) {
 
     const renderCalendar = () => {
         const daysInMonth = getDaysInMonth(currentYear, currentMonth + 1);
+        const firstDayOfWeek = getDayOfWeek(currentYear, currentMonth + 1, 1);
         const days = [];
 
+        // Add empty cells for days before the first day of month
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            days.push(
+                <View
+                    key={`empty-${i}`}
+                    style={{
+                        width: '14.28%',
+                        aspectRatio: 1,
+                    }}
+                />
+            );
+        }
+
+        // Add actual days
         for (let day = 1; day <= daysInMonth; day++) {
             const isSelected = isDateSelected(day);
             const inRange = isDateInRange(day);
@@ -206,7 +266,7 @@ export default function DatePickerComponent2({ field, value, onChange }) {
                         <View style={tw`flex-row mb-2`}>
                             {persianWeekDays.map((day, index) => (
                                 <View key={index} style={{ width: '14.28%', alignItems: 'center' }}>
-                                    <Text style={tw`text-gray-600 font-bold text-sm`}>{day}</Text>
+                                    <Text style={tw`text-yellow-600 font-bold text-sm`}>{day}</Text>
                                 </View>
                             ))}
                         </View>

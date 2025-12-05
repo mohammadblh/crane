@@ -46,7 +46,7 @@ export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit 
                         }}
                     />
 
-                    <DatePickerComponent2
+                    {/* <DatePickerComponent2
                         field={{
                             "sectionId": "time_duration",
                             "title": "مدت زمان:",
@@ -60,7 +60,7 @@ export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit 
                         }}
                         value={null}
                         onChange={(value) => console.log('Selected value:', value)}
-                    />
+                    /> */}
 
                     {/* Bottom Buttons */}
                     <View style={tw`flex-row justify-between`}>
