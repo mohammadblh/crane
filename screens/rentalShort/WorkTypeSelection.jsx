@@ -30,7 +30,7 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
     // }
 
     return (
-        <View style={tw`px-4`}>
+        <View style={tw`px-4 mb-4`}>
             {/* Work Items */}
             {workItems.map((item) => {
                 // Extract checked fields from formData
@@ -140,49 +140,58 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
                 animationType="fade"
                 onRequestClose={() => setShowModal(false)}
             >
-                <View style={tw`flex-1 bg-black bg-opacity-50 items-center justify-center px-4`}>
-                    <View style={tw`bg-white rounded-3xl p-6 w-full max-w-lg`}>
-                        <Text style={tw`text-gray-800 font-bold text-xl text-center mb-3`}>
-                            افزودن نوع کار
-                        </Text>
-                        <Text style={tw`text-gray-500 text-sm text-center mb-6`}>
-                            نوع کار و تاریخ را از گزینه های زیر انتخاب کنید.
-                        </Text>
-
-                        {/* Radio Options */}
-                        <View style={tw`mb-6`}>
-                            {jsonComp.workTypeItem.map((item, key) => (
-                                <TouchableOpacity
-                                    key={key}
-                                    style={tw`flex-row items-center justify-between py-3 border-b border-gray-100`}
-                                    onPress={() => setSelectedWorkType(item)}
-                                >
-                                    <View style={tw`w-6 h-6 rounded-full border-2 ${selectedWorkType === item ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'} items-center justify-center`}>
-                                        {selectedWorkType === item && (
-                                            <Check size={16} color="white" strokeWidth={3} />
-                                        )}
-                                    </View>
-                                    <Text style={tw`text-gray-700 text-base flex-1 text-right mr-4`}>{item}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-
-                        {/* Confirm Button */}
-                        <TouchableOpacity
-                            style={tw`bg-yellow-500 py-3 rounded-lg`}
-                            activeOpacity={0.8}
-                            onPress={() => {
-                                setShowModal(false);
-                                // setShowAddWork(selectedWorkType);
-                                if (onAddWork) onAddWork(selectedWorkType);
-                            }}
-                        >
-                            <Text style={tw`text-gray-900 font-bold text-center text-base`}>
-                                تایید و ادامه
+                <TouchableOpacity
+                    style={tw`flex-1 bg-black bg-opacity-50 items-center justify-center px-4`}
+                    activeOpacity={1}
+                    onPress={() => setShowModal(false)}
+                >
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={(e) => e.stopPropagation()}
+                    >
+                        <View style={tw`bg-white rounded-3xl p-6 w-full max-w-lg`}>
+                            <Text style={tw`text-gray-800 font-bold text-xl text-center mb-3`}>
+                                افزودن نوع کار
                             </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                            <Text style={tw`text-gray-500 text-sm text-center mb-6`}>
+                                نوع کار و تاریخ را از گزینه های زیر انتخاب کنید.
+                            </Text>
+
+                            {/* Radio Options */}
+                            <View style={tw`mb-6`}>
+                                {jsonComp.workTypeItem.map((item, key) => (
+                                    <TouchableOpacity
+                                        key={key}
+                                        style={tw`flex-row items-center justify-between py-3 border-b border-gray-100`}
+                                        onPress={() => setSelectedWorkType(item)}
+                                    >
+                                        <View style={tw`w-6 h-6 rounded-full border-2 ${selectedWorkType === item ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'} items-center justify-center`}>
+                                            {selectedWorkType === item && (
+                                                <Check size={16} color="white" strokeWidth={3} />
+                                            )}
+                                        </View>
+                                        <Text style={tw`text-gray-700 text-base flex-1 text-right mr-4`}>{item}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            {/* Confirm Button */}
+                            <TouchableOpacity
+                                style={tw`bg-yellow-500 py-3 rounded-lg`}
+                                activeOpacity={0.8}
+                                onPress={() => {
+                                    setShowModal(false);
+                                    // setShowAddWork(selectedWorkType);
+                                    if (onAddWork) onAddWork(selectedWorkType);
+                                }}
+                            >
+                                <Text style={tw`text-gray-900 font-bold text-center text-base`}>
+                                    تایید و ادامه
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </TouchableOpacity>
             </Modal>
         </View>
     );

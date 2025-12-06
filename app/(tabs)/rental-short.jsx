@@ -6,6 +6,7 @@ import {
     ScrollView,
     StatusBar,
     Animated,
+    Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +19,7 @@ import WorkshopSelection from '../../screens/rentalShort/WorkshopSelection';
 import WorkTypeSelection from '../../screens/rentalShort/WorkTypeSelection';
 import AdditionalServicesSelection from '../../screens/rentalShort/AdditionalServicesSelection';
 import AddWorkScreen from '../../screens/rentalShort/AddWork';
+import { api } from '../../hooks/useApi';
 
 export default function RentalShortScreen() {
     const [currentStep, setCurrentStep] = useState(1);
@@ -32,6 +34,7 @@ export default function RentalShortScreen() {
         workshopName: '', cat1: '', cat2: '',
         works: []
     });
+    const [additionalServices, setAdditionalServices] = useState({});
 
     console.log('workItems', workItems)
 
@@ -122,12 +125,76 @@ export default function RentalShortScreen() {
         return () => { };
     }, [navigation]);
 
+    const submitRequest = async () => {
+        try {
+            // Create unified request payload
+            const requestPayload = {
+                workshop: {
+                    name: formData.workshopName,
+                    category1: formData.cat1,
+                    category2: formData.cat2
+                },
+                works: workItems.map(item => ({
+                    id: item.id,
+                    type: item.type,
+                    title: item.title,
+                    data: item.formData
+                })),
+                additionalServices: additionalServices,
+                timestamp: new Date().toISOString(),
+                type: 'اجاره موردی'
+            };
+
+            console.log('📦 Submitting request:', requestPayload);
+
+            // Send to API (uses AsyncStorage in DEV_MODE)
+            const response = await api.addWork(requestPayload);
+
+            if (response.success) {
+                // Clear workItems from AsyncStorage
+                await AsyncStorage.removeItem('workItems');
+
+                // Reset all states
+                setWorkItems([]);
+                setFormData({
+                    workshopName: '',
+                    cat1: '',
+                    cat2: '',
+                    works: []
+                });
+                setAdditionalServices({});
+
+                console.log('✅ States cleared for new request');
+
+                Alert.alert(
+                    'موفق',
+                    response.message,
+                    [
+                        {
+                            text: 'باشه',
+                            onPress: () => {
+                                // Reset to step 1 and go home
+                                setCurrentStep(1);
+                                router.push('/(tabs)');
+                            }
+                        }
+                    ]
+                );
+            } else {
+                Alert.alert('خطا', response.message);
+            }
+        } catch (error) {
+            console.error('Error submitting request:', error);
+            Alert.alert('خطا', 'خطا در ارسال درخواست');
+        }
+    };
+
     const handleNext = () => {
         if (currentStep < 3) {
             setCurrentStep(currentStep + 1);
         } else {
-            // Finish flow - redirect to home
-            router.push('/(tabs)');
+            // Submit request on step 3
+            submitRequest();
         }
     };
 
@@ -287,7 +354,10 @@ export default function RentalShortScreen() {
                         )}
 
                         {currentStep === 3 && (
-                            <AdditionalServicesSelection onNext={handleNext} onPrev={handlePrev} />
+                            <AdditionalServicesSelection
+                                jsonComp={rentalShort.steps[2]}
+                                onChange={(data) => setAdditionalServices(data)}
+                            />
                         )}
                     </Animated.View>
                 </View>

@@ -32,13 +32,14 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === 'auth';
     const inTabsGroup = segments[0] === '(tabs)';
+    const inRequestScreen = segments[0] === 'rental-request' || segments[0] === 'project-request';
 
     if (isFirstLaunch) {
       router.replace('/onboarding');
-    } else if (!user && !inAuthGroup) {
+    } else if (!user && !inAuthGroup && !inRequestScreen) {
       // router.replace('/(tabs)');
       router.replace('/auth/login');
-    } else if (user && !inTabsGroup) {
+    } else if (user && !inTabsGroup && !inRequestScreen) {
       router.replace('/(tabs)');
       getForms();
     }
@@ -56,6 +57,8 @@ function RootLayoutNav() {
       <Stack.Screen name="auth/login" />
       <Stack.Screen name="auth/signup" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="rental-request" />
+      <Stack.Screen name="project-request" />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

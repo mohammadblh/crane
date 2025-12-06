@@ -139,6 +139,40 @@ export const api = {
     });
   },
 
+  // ارسال کار (درخواست اجاره)
+  addWork: async (requestData) => {
+    if (DEV_MODE) {
+      console.log('🔧 DEV MODE: Saving request to AsyncStorage');
+      console.log('Request data:', requestData);
+      
+      // دریافت درخواست‌های قبلی
+      const existingRequestsJson = await AsyncStorage.getItem('requests');
+      const existingRequests = existingRequestsJson ? JSON.parse(existingRequestsJson) : [];
+      
+      // اضافه کردن ID و timestamp
+      const newRequest = {
+        ...requestData,
+        id: existingRequests.length + 1,
+        timestamp: new Date().toISOString(),
+        status: 'pending' // وضعیت پیش‌فرض
+      };
+      
+      // اضافه کردن به لیست
+      existingRequests.push(newRequest);
+      
+      // ذخیره در AsyncStorage
+      await AsyncStorage.setItem('requests', JSON.stringify(existingRequests));
+      
+      return mockDelay({
+        success: true,
+        message: 'درخواست شما با موفقیت ثبت شد',
+        data: newRequest
+      });
+    }
+    
+    return sendRequest('m_addwork', requestData);
+  },
+
   // دریافت فرم
   news: (fingerData, time) => sendRequest('m_news', {
     finger: fingerData,

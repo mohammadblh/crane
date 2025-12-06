@@ -173,8 +173,28 @@
           ]
         },
         {
+            "sectionId": "text_1",
+            "title": "هزینه های اضافه:",
+            "type": 0,
+            "style": 1,
+            "sx": {
+                "color": "yellow-500",
+                "alignment": "right",
+                "bold": true,
+                "size": "md"
+            }
+        },
+        {
             "sectionId": "مدارک و مجوز ها",
             "title": "مدارک و مجوز ها",
+            "type": 5,
+            "style": 1,
+            "color": "yellow",
+            "defaultValue": false
+        },
+        {
+            "sectionId": "هزینه رفت و برگشت",
+            "title": "هزینه رفت و برگشت",
             "type": 5,
             "style": 1,
             "color": "yellow",

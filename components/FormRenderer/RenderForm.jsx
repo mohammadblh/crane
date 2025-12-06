@@ -7,6 +7,7 @@ import CheckboxRender from './CheckboxRender';
 import FileUpload from '../inputs/File/FileUpload';
 import DatePickerComponent from '../inputs/Date/DatePickerComponent';
 import MapView from '../inputs/Map/MapView';
+import SectionTitle from '../inputs/Text/SectionTitle';
 
 export default function RenderForm({ data, onChange }) {
   const [formData, setFormData] = useState({});
@@ -36,6 +37,12 @@ export default function RenderForm({ data, onChange }) {
 
   const renderField = (field) => {
     switch (field.type) {
+      case 0:
+        return <SectionTitle
+          title={field.title}
+          sx={field.sx}
+        />
+
       case 1:
         return (
           <InputRender
