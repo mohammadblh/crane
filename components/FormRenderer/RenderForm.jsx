@@ -6,6 +6,7 @@ import SelectRender from './SelectRender';
 import CheckboxRender from './CheckboxRender';
 import FileUpload from '../inputs/File/FileUpload';
 import DatePickerComponent from '../inputs/Date/DatePickerComponent';
+import DatePickerComponent2 from '../inputs/Date/DatePicker2';
 import MapView from '../inputs/Map/MapView';
 import SectionTitle from '../inputs/Text/SectionTitle';
 
@@ -70,9 +71,10 @@ export default function RenderForm({ data, onChange }) {
           />
         );
 
-      case 7: // Date Picker
+      case 6: // Date Picker
         return (
-          <DatePickerComponent
+          <DatePickerComponent2
+          // <DatePickerComponent
             field={field}
             value={field.defaultValue}
             onChange={onChange}

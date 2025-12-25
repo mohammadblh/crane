@@ -190,7 +190,7 @@ export default function RentalShortScreen() {
     };
 
     const handleNext = () => {
-        if (currentStep < 3) {
+        if (currentStep < rentalShort.steps.length) {
             setCurrentStep(currentStep + 1);
         } else {
             // Submit request on step 3
@@ -332,7 +332,7 @@ export default function RentalShortScreen() {
 
                 <View style={tw`h-full mt-6 mb-6`}>
                     {/* Progress Steps */}
-                    <StepProgress currentStep={currentStep} />
+                    <StepProgress currentStep={currentStep} steps={rentalShort.steps} />
 
                     {/* Step Content with Animation */}
                     <Animated.View
@@ -367,7 +367,7 @@ export default function RentalShortScreen() {
             <View
                 style={tw`absolute flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`}
             >
-                {currentStep === 3 ? <TouchableOpacity
+                {currentStep === rentalShort.steps.length ? <TouchableOpacity
                     style={tw`flex-1 bg-yellow-500 py-3 rounded-lg shadow-lg`}
                     onPress={handleNext}
                 >
