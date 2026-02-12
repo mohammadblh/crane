@@ -50,7 +50,7 @@
         }
       ],
       "sections2": [
-        {
+         {
           "sectionId": "workshop_type",
           "title": "نام کارگاه",
           "placeholder": "نام کارگاه خود را انتخاب کنید",

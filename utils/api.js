@@ -22,7 +22,7 @@ const getBaseUrl = async () => {
 // تابع اصلی برای ارسال درخواست
 export const sendRequest = async (operation, additionalParams = {}) => {
   try {
-    const baseUrl = "https://shahid-moqavemat.ir/modules.php";
+    const baseUrl = "https://crane-moqavemat.ir";
     // const baseUrl = await getBaseUrl();
     // const fullUrl = `${baseUrl}/modules.php`;
 
@@ -99,6 +99,10 @@ export const api = {
   // گرفتن اطلاعات کاربر
   getUserInfo: (userId) => sendRequest('m_profile', {
     user_id: userId
+  }),
+  forms: (fingerData, time) => sendRequest('m_forms', {
+    finger: fingerData,
+    time
   }),
   
   // ارسال موقعیت

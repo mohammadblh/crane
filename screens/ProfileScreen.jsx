@@ -21,6 +21,8 @@ export default function ProfileScreen() {
     postalCode: ''
   });
 
+  console.log("profile>>",)
+
   const [editData, setEditData] = useState({ ...profileData });
 
   // بارگذاری اطلاعات پروفایل

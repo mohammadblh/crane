@@ -1,18 +1,27 @@
 // Development Configuration
 // تنظیمات توسعه - برای تست بدون سرور
+import rentalLong from './rental-long-data.json'
 import rentalShort from './rental-short-data.json'
+import rentalProject from './rental-project-data.json'
 /**
  * حالت توسعه (Development Mode)
  * true = استفاده از داده‌های فیک (بدون نیاز به سرور)
  * false = استفاده از API واقعی
  */
-export const DEV_MODE = true;
+export const DEV_MODE = false;
 
 
 /**
  * داده‌های فیک برای تست
  */
 export const MOCK_DATA = {
+  version: {
+    success: true,
+    version: "1.0.1", 
+    logo: "",
+    name: "سامانه جرثقیل",
+    images: []
+  },
   // داده‌های لاگین موفق
   login: {
     success: true,
@@ -26,10 +35,12 @@ export const MOCK_DATA = {
     message: "ورود موفقیت‌آمیز",
     user: {
       id: 1,
-      username: "nejati",
       mobile: "09123456789",
-      name: "کاربر تستی",
+      fname: "mohammad",
+      lname: "nejati",
       email: "test@example.com",
+      avatar: "",
+      nationalCode: ""
     },
   },
 
@@ -37,22 +48,30 @@ export const MOCK_DATA = {
   profile: {
     success: true,
     data: {
-      firstName: "محمد",
-      lastName: "نجاتی",
-      username: "nejati",
-      phone: "۰۹۱۲۳۴۵۶۷۸۹",
-      nationalId: "۰۰۱۲۳۴۵۶۷۸",
-      birthDate: "۱۳۷۰/۰۵/۱۵",
-      postalCode: "۱۲۳۴۵۶۷۸۹۰",
-      email: "nejati@example.com",
-      avatar: null,
+      id: 1,
+      mobile: "09123456789",
+      fname: "mohammad",
+      lname: "nejati",
+      email: "test@example.com",
+      avatar: "",
+      nationalCode: ""
     },
   },
 
-  form: {
+  rentalLong: {
+    success: true,
+    data: rentalLong
+  },
+
+  rentalShort: {
     success: true,
     data: rentalShort
-  }
+  },
+
+  rentalProject: {
+    success: true,
+    data: rentalProject
+  },
 };
 
 /**

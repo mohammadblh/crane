@@ -8,12 +8,14 @@ import * as SplashScreen from 'expo-splash-screen';
 import { api } from '../hooks/useApi';
 import { useFrameworkReady } from '../hooks/useFrameworkReady';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { AppProvider, useApp } from '../contexts/AppContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { user, loading, isFirstLaunch } = useAuth();
+  const { version, setConfig } = useApp();
   const segments = useSegments();
   const router = useRouter();
 
@@ -21,14 +23,23 @@ function RootLayoutNav() {
     const finger = await AsyncStorage.getItem('user_finger');
     if (!finger) return;
 
-    const rentalShort = await api.forms(finger);
-    console.log('rentalShort>>>', rentalShort)
+    const rentalShort = await api.rentalShort(finger);
+    const rentalProject = await api.rentalProject(finger);
+    const rentalLong = await api.rentalLong(finger);
+
+    if (rentalLong)
+      await AsyncStorage.setItem('rentalLong', JSON.stringify(rentalLong));
     if (rentalShort)
       await AsyncStorage.setItem('rentalShort', JSON.stringify(rentalShort));
+    if (rentalProject)
+      await AsyncStorage.setItem('rentalProject', JSON.stringify(rentalProject))
   }
 
   useEffect(() => {
     if (loading) return;
+
+    //set app version
+    api.getVersion().then((res) => setConfig(res))
 
     const inAuthGroup = segments[0] === 'auth';
     const inTabsGroup = segments[0] === '(tabs)';
@@ -41,7 +52,7 @@ function RootLayoutNav() {
       router.replace('/auth/login');
     } else if (user && !inTabsGroup && !inRequestScreen) {
       router.replace('/(tabs)');
-      getForms();
+      // getForms();
     }
   }, [user, loading, isFirstLaunch, segments]);
 
@@ -87,8 +98,10 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
-      <StatusBar style="auto" />
+      <AppProvider>
+        <RootLayoutNav />
+        <StatusBar style="auto" />
+      </AppProvider>
     </AuthProvider>
   );
 }

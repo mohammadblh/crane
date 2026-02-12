@@ -109,7 +109,7 @@ export default function FileUpload({ field, value, onChange }) {
                     </Text>
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <View style={tw`flex-row`}>
+                        <View style={tw`flex-row mt-2`}>
                             {files.map((file, index) => (
                                 <View
                                     key={index}

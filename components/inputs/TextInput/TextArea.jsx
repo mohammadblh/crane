@@ -12,17 +12,19 @@ export default function TextArea({ field, value, onChange }) {
 
     // Calculate character count
     const maxLength = field.maxLength || 250;
-    const currentLength = value ? value.length : 0;
+    const currentLength = value ? value.length : 0; 
 
     return (
         <View style={tw`mb-4`}>
             {/* باکس ورودی */}
             <View style={tw`bg-white border-2 border-blue-400 rounded-xl px-4 py-3`}>
                 {/* Header with title and clear button */}
-                <View style={tw`flex-row items-center justify-between mb-2`}>
-                    <Text style={tw`text-blue-600 font-bold text-sm`}>
+                <View style={tw`absolute -top-2.5 right-3 bg-white px-1 z-10`}>
+                    <Text style={[tw`text-xs text-gray-700`, { fontFamily: 'Dana' }]}>
                         {field.title}
                     </Text>
+                </View>
+                <View style={tw`flex-row items-center justify-between mb-2`}>
                     {value && value.length > 0 && (
                         <TouchableOpacity onPress={handleClear}>
                             <X size={18} color="#3B82F6" />

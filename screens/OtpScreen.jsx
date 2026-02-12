@@ -19,12 +19,15 @@ import {
 import * as Animatable from 'react-native-animatable';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import tw from 'tailwind-react-native-classnames';
 import { api } from '../hooks/useApi';
 import { useAuth } from '../contexts/AuthContext';
+import { useApp } from '../contexts/AppContext';
 
 const { width } = Dimensions.get('window');
 
 const CraneOTPScreen = () => {
+    const { images, } = useApp();
     const [otp, setOtp] = useState(["", "", "", "", ""]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
@@ -35,17 +38,10 @@ const CraneOTPScreen = () => {
     const router = useRouter();
     const { setUserData } = useAuth();
 
-    // تصاویر اسلایدر
-    const sliderImages = [
-        require("../assets/images/bg-login.png"),
-        require("../assets/images/bg-login.png"),
-        require("../assets/images/bg-login.png"),
-    ];
-
     // Load finger and mobile number on mount
     React.useEffect(() => {
         const loadData = async () => {
-            const storedFinger = await AsyncStorage.getItem('temp_finger');
+            const storedFinger = await AsyncStorage.getItem('user_finger');
             const storedMobile = await AsyncStorage.getItem('temp_mobile');
             if (storedFinger) {
                 setFinger(storedFinger);
@@ -100,22 +96,30 @@ const CraneOTPScreen = () => {
             // Call verify API
             const response = await api.verify(finger, otpCode);
 
-            console.log("Verify response:", response);
+            console.log('response', response)
 
+            if(!response || !response.success) throw new Error("کد وارد شده نامعتبر است")
             // Store user data
-            if (response && response.user) {
-                await AsyncStorage.setItem('user_finger', finger);
+            if (response) {
+            // if (response && response.user) { TODO: اینجا باید یوزر پر شود
+                // await AsyncStorage.setItem('user_finger', finger);
                 // Update AuthContext with user data
-                await setUserData(response.user);
+                // await setUserData(response.user);
+
+
+                await setUserData({
+                    fname: 'mohammad', lname: 'njt', phone: '09130895830', username: 'nejati'
+                });
+
+                // Navigate to Home (Tabs)
+                router.push('/(tabs)');
             }
 
             // Clear temp data
-            await AsyncStorage.removeItem('temp_username');
-            await AsyncStorage.removeItem('temp_finger');
+            // await AsyncStorage.removeItem('temp_username');
+            // await AsyncStorage.removeItem('temp_finger');
             await AsyncStorage.removeItem('temp_mobile');
 
-            // Navigate to Home (Tabs)
-            router.push('/(tabs)');
 
         } catch (error) {
             console.error("Verification error:", error);
@@ -127,20 +131,25 @@ const CraneOTPScreen = () => {
 
     const renderSliderItem = ({ item, index }) => {
         return (
-            <View style={styles.slide}>
-                <Image
-                    style={styles.sliderImage}
-                    source={item}
-                    resizeMode="cover"
-                />
-            </View>
+        <Animatable.View
+            animation="fadeIn"
+            duration={1000}
+            delay={index * 300}
+            style={{ width: width - 48, height: 250 }}
+        >
+            <Image
+            style={tw`w-full h-full rounded-2xl`}
+            source={item}
+            resizeMode="cover"
+            />
+        </Animatable.View>
         );
     };
 
     const renderPagination = () => {
         return (
             <View style={styles.paginationContainer}>
-                {sliderImages.map((_, index) => {
+                {images.map((_, index) => {
                     const inputRange = [
                         (index - 1) * width,
                         index * width,
@@ -192,10 +201,11 @@ const CraneOTPScreen = () => {
                     <Animatable.View
                         animation="fadeIn"
                         duration={1000}
-                        style={styles.sliderContainer}
+                        style={tw`h-64 my-5 rounded-2xl overflow-hidden bg-white shadow-lg`}
+                        // style={styles.sliderContainer}
                     >
                         <FlatList
-                            data={sliderImages}
+                            data={images}
                             renderItem={renderSliderItem}
                             horizontal
                             pagingEnabled
@@ -266,7 +276,8 @@ const CraneOTPScreen = () => {
                             ))}
                         </View>
 
-                        <TouchableOpacity onPress={() => router.back()}>
+                        <TouchableOpacity onPress={() => router.replace('/login')}>
+                        {/* <TouchableOpacity onPress={() => router.back()}> */}
                             <Animatable.Text
                                 animation="fadeIn"
                                 duration={600}
@@ -340,6 +351,7 @@ const styles = StyleSheet.create({
     sliderContainer: {
         height: 220,
         marginBottom: 30,
+        marginTop: 30,
         borderRadius: 15,
         overflow: 'hidden',
         backgroundColor: '#fff',

@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowRight } from 'lucide-react-native';
 import tw from 'tailwind-react-native-classnames';
 import { useNavigation, useRouter, useFocusEffect } from 'expo-router';
+import { useApp } from '../../contexts/AppContext';
 import Loading from '../../components/Loading';
 import StepProgress from '../../components/StepProgress';
 import WorkshopSelection from '../../screens/rentalShort/WorkshopSelection';
@@ -20,12 +21,15 @@ import WorkTypeSelection from '../../screens/rentalShort/WorkTypeSelection';
 import AdditionalServicesSelection from '../../screens/rentalShort/AdditionalServicesSelection';
 import AddWorkScreen from '../../screens/rentalShort/AddWork';
 import { api } from '../../hooks/useApi';
+import RenderForm from '@/components/FormRenderer/RenderForm';
 
 export default function RentalShortScreen() {
+    const { rentalShort } = useApp();
+    
     const [currentStep, setCurrentStep] = useState(1);
     const [showAddWork, setShowAddWork] = useState(null);
     const [nextDisabled, setNextDisabled] = useState(false);
-    const [rentalShort, setRentalShort] = useState(null);
+    // const [rentalShort, setRentalShort] = useState(null);
     const [workItems, setWorkItems] = useState([]);
     const [pendingWorkType, setPendingWorkType] = useState(null);
     const [previousStep, setPreviousStep] = useState(1);
@@ -37,6 +41,7 @@ export default function RentalShortScreen() {
     const [additionalServices, setAdditionalServices] = useState({});
 
     console.log('workItems', workItems)
+    console.log('rentalShort', rentalShort)
 
     const navigation = useNavigation();
     const router = useRouter();
@@ -55,28 +60,32 @@ export default function RentalShortScreen() {
     );
 
     // get fields and load workItems from AsyncStorage
-    useEffect(() => {
-        const loadData = async () => {
-            // Load rental short data
-            let res = await AsyncStorage.getItem('rentalShort');
-            res = JSON.parse(res);
+    // useEffect(() => {
+    //     const loadData = async () => {
+    //         // Load rental short data
+    //         let res = await AsyncStorage.getItem('rentalShort');
+    //         res = JSON.parse(res);
 
-            if (res)
-                setRentalShort(res.data);
+    //         if(!res) {
+    //             const finger = await AsyncStorage.getItem('user_finger');
+    //             res = await api.rentalShort(finger);
+    //         }
 
-            // Load workItems from AsyncStorage
-            const savedWorkItems = await AsyncStorage.getItem('workItems');
-            if (savedWorkItems) {
-                const parsedWorkItems = JSON.parse(savedWorkItems);
-                setWorkItems(parsedWorkItems);
-                setFormData(prev => ({
-                    ...prev,
-                    works: parsedWorkItems
-                }));
-            }
-        };
-        loadData();
-    }, []);
+    //         setRentalShort(res.data);
+
+    //         // Load workItems from AsyncStorage
+    //         const savedWorkItems = await AsyncStorage.getItem('workItems');
+    //         if (savedWorkItems) {
+    //             const parsedWorkItems = JSON.parse(savedWorkItems);
+    //             setWorkItems(parsedWorkItems);
+    //             setFormData(prev => ({
+    //                 ...prev,
+    //                 works: parsedWorkItems
+    //             }));
+    //         }
+    //     };
+    //     loadData();
+    // }, []);
 
     // Animate step transitions
     useEffect(() => {
@@ -291,23 +300,49 @@ export default function RentalShortScreen() {
     };
 
     if (showAddWork) {
-        const items = rentalShort.steps[1].sections;
-        // const items = rentalShort.steps[1].sections[showAddWork];
-        if (items && items[showAddWork] && items[showAddWork].length)
+        const items = rentalShort.steps[1].sections.slice(1);
+        // const items = rentalShort.steps[1].sections;
+        // if (items && items[showAddWork] && items[showAddWork].length)
+        if (items && items.length)
             return (
                 <AddWorkScreen
                     onBack={() => setShowAddWork(false)}
                     onSubmit={handleAddNewItem}
-                    items={items[showAddWork]}
+                    items={items}
+                    // items={items[showAddWork]}
                     addWorkName={showAddWork}
                 // workType={pendingWorkType}
                 />
             );
     }
 
+    const renderSteps = () => {
+        switch (currentStep) {
+            case 1:
+                return <WorkshopSelection jsonComp={rentalShort.steps[0]} />        
+
+            case 2:
+                return <WorkTypeSelection
+                    onAddWork={handleAddWorkStart}
+                    workItems={workItems}
+                    jsonComp={rentalShort.steps[1]}
+                    onRemoveItem={handleRemoveItem}
+                />
+
+            case 3:
+                return <AdditionalServicesSelection
+                    jsonComp={rentalShort.steps[2]}
+                    onChange={(data) => setAdditionalServices(data)}
+                />
+        
+            default:
+                return <RenderForm data={rentalShort.steps[currentStep-1].sections} 
+                // onChange={handleFormChange} 
+                />
+        }
+    }
 
     if (!rentalShort) return <Loading />;
-
 
     return (
         <SafeAreaView style={tw`flex-1 bg-white`} edges={['top', 'left', 'right']}>
@@ -340,32 +375,34 @@ export default function RentalShortScreen() {
                             transform: [{ translateX: slideAnimation }],
                         }}
                     >
-                        {currentStep === 1 && (
-                            <WorkshopSelection jsonComp={rentalShort.steps[0]} />
-                        )}
 
-                        {currentStep === 2 && (
+                        {renderSteps()}
+                        {/* {currentStep === 1 && (
+                            <WorkshopSelection jsonComp={rentalShort.steps[0]} />
+                        )} */}
+
+                        {/* {currentStep === 2 && (
                             <WorkTypeSelection
                                 onAddWork={handleAddWorkStart}
                                 workItems={workItems}
                                 jsonComp={rentalShort.steps[1]}
                                 onRemoveItem={handleRemoveItem}
                             />
-                        )}
+                        )} */}
 
-                        {currentStep === 3 && (
+                        {/* {currentStep === 3 && (
                             <AdditionalServicesSelection
                                 jsonComp={rentalShort.steps[2]}
                                 onChange={(data) => setAdditionalServices(data)}
                             />
-                        )}
+                        )} */}
                     </Animated.View>
                 </View>
             </ScrollView>
 
             {/* دکمه ثابت در پایین صفحه */}
             <View
-                style={tw`absolute flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`}
+                style={tw`fixed flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`}
             >
                 {currentStep === rentalShort.steps.length ? <TouchableOpacity
                     style={tw`flex-1 bg-yellow-500 py-3 rounded-lg shadow-lg`}

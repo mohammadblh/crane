@@ -1,0 +1,161 @@
+{
+  "schemaVersion": "1.1",
+  "formId": "rental-project",
+  "title": "پروژه",
+  "steps": [
+    {
+      "stepId": "step_1",
+      "stepNumber": 1,
+      "title": "انتخاب کارگاه",
+      "sections": [
+        {
+          "sectionId": "workshop_type",
+          "title": "نام کارگاه",
+          "placeholder": "نام کارگاه خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "کارگاه اول",
+            "کارگاه دوم",
+            "کارگاه سوم"
+          ],
+          "defaultValue": "کارگاه اول"
+        },
+        {
+          "sectionId": "دسته اول",
+          "title": "دسته اول",
+          "placeholder": "دسته اول خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "گزینه یک",
+            "گزینه ذو",
+            "گزینه سه"
+          ]
+        },
+        {
+          "sectionId": "دسته دوم",
+          "title": "دسته دوم",
+          "placeholder": "دسته دوم خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "گزینه یک",
+            "گزینه ذو",
+            "گزینه سه"
+          ]
+        }
+      ],
+      "sections2": [
+         {
+          "sectionId": "workshop_type",
+          "title": "نام کارگاه",
+          "placeholder": "نام کارگاه خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "کارگاه اول",
+            "کارگاه دوم",
+            "کارگاه سوم"
+          ],
+          "defaultValue": "کارگاه اول"
+        },
+        {
+            "sectionId": "location_map",
+            "title": "موقعیت مکانی:",
+            "description": "موقعیت دقیق پروژه روی نقشه",
+            "type": 10,
+            "style": 1,
+            "required": false,
+            "height": 300,
+            "scrollEnabled": true,
+            "zoomEnabled": true,
+            "markerTitle": "موقعیت پروژه",
+            "markerDescription": "محل اجرای پروژه",
+            "defaultValue": {
+                "latitude": 35.6892,
+                "longitude": 51.3890
+            }
+        },
+        {
+            "sectionId": "مدارک و مجوز ها",
+            "title": "مدارک و مجوز ها",
+            "type": 5,
+            "style": 1,
+            "color": "yellow",
+            "defaultValue": false
+        }
+      ]
+    },
+    {
+      "stepId": "step_2",
+      "stepNumber": 2,
+      "title": "فایل پروژه",
+      "sections": [
+        {
+            "sectionId": "attachments",
+            "title": "آپلود فایل",
+            "description": "شما میتوانید تا حداکثر 20 مکاتبات قابل آپلود کنید.",
+            "type": 8,
+            "style": 1,
+            "required": false,
+            "size": 20,
+            "acceptedFormats": ["image/*", "application/pdf"],
+            "formatDescription": "فرمت پشتیبانی باید PDF باشد (حداکثر 800x400px)"
+        }
+      ]
+    },
+    {
+      "stepId": "step_3",
+      "stepNumber": 3,
+      "title": "خدمات اضافی",
+      "sections": [
+        {
+          "sectionId": "بیمه",
+          "title": "بیمه",
+          "placeholder": "نوع بیمه خود را انتخاب کنید",
+          "type": 4,
+          "style": 1,
+          "required": true,
+          "options": [
+            "بیمه اول",
+            "بیمه دوم",
+            "بیمه سوم"
+          ]
+        },
+        {
+            "sectionId": "text_1",
+            "title": "هزینه های اضافه:",
+            "type": 0,
+            "style": 1,
+            "sx": {
+                "color": "yellow-500",
+                "alignment": "right",
+                "bold": true,
+                "size": "md"
+            }
+        },
+        {
+            "sectionId": "مدارک و مجوز ها",
+            "title": "مدارک و مجوز ها",
+            "type": 5,
+            "style": 1,
+            "color": "yellow",
+            "defaultValue": false
+        },
+        {
+            "sectionId": "هزینه رفت و برگشت",
+            "title": "هزینه رفت و برگشت",
+            "type": 5,
+            "style": 1,
+            "color": "yellow",
+            "defaultValue": false
+        }
+      ]
+    }
+  ]
+}

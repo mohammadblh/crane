@@ -33,6 +33,11 @@ const isLeapYear = (year) => {
     return breaks.some(breakPoint => yearInCycle === breakPoint);
 };
 
+// TODO: convert Gregorian to Jalaali
+const GregorianToJalaali = (y, m, d) => {
+    return {year: 1404, month: 9}
+}
+
 // Convert Jalaali to Gregorian
 const jalaaliToGregorian = (jy, jm, jd) => {
     const gy = jy + 621;
@@ -79,9 +84,14 @@ const getDayOfWeek = (jy, jm, jd) => {
 
 
 export default function DatePickerComponent2({ field, value, onChange }) {
+    const now = new Date(Date.now());
+    const current = GregorianToJalaali(now.getFullYear(), now.getMonth());
+    console.log('blh>>>', Date.now())
+    console.log('now>>>', now.toLocaleDateString('fa-IR', 'yy/dd'));
+    // console.log('getMonth>>>', Intl.NumberFormat('yy'))
     const [showPicker, setShowPicker] = useState(false);
-    const [currentYear, setCurrentYear] = useState(1404);
-    const [currentMonth, setCurrentMonth] = useState(8); // 0-indexed (Azar = 8)
+    const [currentYear, setCurrentYear] = useState(current.year);
+    const [currentMonth, setCurrentMonth] = useState(current.month); // 0-indexed (Azar = 8)
     const [selectedDates, setSelectedDates] = useState(value || []);
     const isRange = field.mode === 'range';
     const isWeb = Platform.OS === 'web';
@@ -279,22 +289,22 @@ export default function DatePickerComponent2({ field, value, onChange }) {
                         {/* Buttons */}
                         <View style={tw`flex-row mt-6`}>
                             <TouchableOpacity
-                                style={tw`flex-1 bg-yellow-500 py-3 rounded-xl ml-2`}
-                                onPress={handleConfirm}
-                                activeOpacity={0.8}
-                            >
-                                <Text style={tw`text-gray-900 font-bold text-center text-base`}>
-                                    تایید
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={tw`flex-1 border-2 border-gray-300 bg-white py-3 rounded-xl mr-2`}
+                                style={tw`flex-1 border-2 border-gray-300 bg-white py-3 rounded-xl ml-2`}
                                 onPress={handleCancel}
                                 activeOpacity={0.8}
                             >
                                 <Text style={tw`text-gray-700 font-bold text-center text-base`}>
                                     لغو
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={tw`flex-1 bg-yellow-500 py-3 rounded-xl mr-2`}
+                                onPress={handleConfirm}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={tw`text-gray-900 font-bold text-center text-base`}>
+                                    تایید
                                 </Text>
                             </TouchableOpacity>
                         </View>

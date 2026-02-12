@@ -101,7 +101,7 @@ export default function WorkshopSelection({ jsonComp }) {
             </View>
 
             <RenderForm
-                data={jsonComp.sections}
+                data={selectedWorkshopType === 'new' ? jsonComp.sections2 : jsonComp.sections}
                 onChange={(formData) => console.log("FORM:", formData)}
             />
         </View>

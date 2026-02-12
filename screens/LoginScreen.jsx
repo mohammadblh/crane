@@ -21,16 +21,18 @@ import { useRouter } from 'expo-router';
 import tw from 'tailwind-react-native-classnames';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../hooks/useApi';
+import { useApp } from '../contexts/AppContext';
 
 const { width } = Dimensions.get('window');
 
 const CraneLoginScreen = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const { version, logo, images, appName } = useApp();
+  // const [username, setUsername] = useState("");
+  const [mobile, setMobile] = useState("");
+  // const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [currentSlide, setCurrentSlide] = useState(0);
+  // const [currentSlide, setCurrentSlide] = useState(0);
   const router = useRouter();
 
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -38,23 +40,22 @@ const CraneLoginScreen = () => {
   const logoRef = useRef(null);
   const buttonRef = useRef(null);
 
-  // تصاویر اسلایدر
-  const sliderImages = [
-    require("../assets/images/bg-login.png"),
-    require("../assets/images/bg-login.png"),
-    require("../assets/images/bg-login.png"),
-  ];
-
   const handleLogin = async () => {
     if (isLoading) return;
 
     // Validation
-    if (!username.trim()) {
-      setError("لطفاً نام کاربری را وارد کنید");
+    // if (!username.trim()) {
+    //   setError("لطفاً نام کاربری را وارد کنید");
+    //   return;
+    // }
+    if (!mobile.trim()) {
+      setError("لطفاً شماره موبایل را وارد کنید");
       return;
     }
-    if (!password.trim()) {
-      setError("لطفاً شماره موبایل را وارد کنید");
+
+    const mobileRegex = /^(?:\+98|0)?9\d{9}$/;
+    if (!mobileRegex.test(mobile)) {
+      setError("فرمت شماره موبایل صحیح نیست");
       return;
     }
 
@@ -63,23 +64,25 @@ const CraneLoginScreen = () => {
 
     try {
       // Generate or retrieve finger (device ID)
-      let finger = await AsyncStorage.getItem('device_finger');
-      if (!finger) {
-        finger = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        await AsyncStorage.setItem('device_finger', finger);
-      }
+      // let finger = await AsyncStorage.getItem('user_finger');
+      // if (!finger) {
+      //   finger = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      //   await AsyncStorage.setItem('user_finger', finger);
+      // }
 
-      console.log("Logging in with:", { username, mob: password, finger });
+      // console.log("Logging in with:", {mob: mobile, finger });
 
       // Call API
-      const response = await api.login(username, password);
+      const response = await api.login(mobile);
+      // const response = await api.login(username, password);
 
       console.log("Login response:", response);
 
+      if(!response.success) throw new Error(response.message);
       // Store finger, username and mobile for OTP screen
-      await AsyncStorage.setItem('temp_username', username);
-      await AsyncStorage.setItem('temp_finger', finger);
-      await AsyncStorage.setItem('temp_mobile', password);
+      // await AsyncStorage.setItem('temp_username', username);
+      await AsyncStorage.setItem('user_finger', response.finger);
+      await AsyncStorage.setItem('temp_mobile', mobile);
 
       // Navigate to OTP screen
       router.push('/auth/otp');
@@ -122,7 +125,7 @@ const CraneLoginScreen = () => {
   const renderPagination = () => {
     return (
       <View style={tw`flex-row justify-center items-center absolute bottom-4 self-center`}>
-        {sliderImages.map((_, index) => {
+        {images.map((_, index) => {
           const inputRange = [
             (index - 1) * width,
             index * width,
@@ -176,10 +179,10 @@ const CraneLoginScreen = () => {
           <Animatable.View
             animation="zoomIn"
             duration={1500}
-            style={tw`h-64 mb-5 rounded-2xl overflow-hidden bg-white shadow-lg`}
+            style={tw`h-64 my-5 rounded-2xl overflow-hidden bg-white shadow-lg`}
           >
             <FlatList
-              data={sliderImages}
+              data={images}
               renderItem={renderSliderItem}
               horizontal
               pagingEnabled
@@ -228,7 +231,7 @@ const CraneLoginScreen = () => {
             style={tw`flex-1`}
           >
             {/* Username Input */}
-            <Animatable.View
+            {/* <Animatable.View
               animation="fadeIn"
               duration={600}
               delay={1000}
@@ -259,9 +262,9 @@ const CraneLoginScreen = () => {
                   />
                 </View>
               </View>
-            </Animatable.View>
+            </Animatable.View> */}
 
-            {/* Password Input */}
+            {/* mobile Input */}
             <Animatable.View
               animation="fadeIn"
               duration={600}
@@ -271,7 +274,7 @@ const CraneLoginScreen = () => {
               <View style={tw`relative bg-white rounded-xl border border-gray-200 px-4 py-3.5`}>
                 <View style={tw`absolute -top-2.5 right-3 bg-white px-1 z-10`}>
                   <Text style={[tw`text-xs text-gray-700`, { fontFamily: 'Dana' }]}>
-                    رمز عبور (شماره موبایل)
+                    شماره موبایل
                   </Text>
                 </View>
                 <View style={tw`flex-row items-center h-12`}>
@@ -279,8 +282,8 @@ const CraneLoginScreen = () => {
                     style={[tw`flex-1 h-full text-base text-gray-800 text-right`, { fontFamily: 'Dana' }]}
                     placeholder="۰۹۳۳۰۰۰۰۰۰۰"
                     placeholderTextColor="#9CA3AF"
-                    value={password}
-                    onChangeText={setPassword}
+                    value={mobile}
+                    onChangeText={setMobile}
                     keyboardType="numeric"
                   />
                 </View>
@@ -288,7 +291,7 @@ const CraneLoginScreen = () => {
             </Animatable.View>
 
             {/* Forgot Password */}
-            <Animatable.View
+            {/* <Animatable.View
               animation="fadeIn"
               duration={600}
               delay={1200}
@@ -298,7 +301,7 @@ const CraneLoginScreen = () => {
                   رمز عبور خود را فراموش کرده ام
                 </Text>
               </TouchableOpacity>
-            </Animatable.View>
+            </Animatable.View> */}
 
             {/* Error Message */}
             {error ? (
@@ -345,7 +348,8 @@ const CraneLoginScreen = () => {
               style={tw`items-center pb-5`}
             >
               <Text style={[tw`text-sm text-gray-500`, { fontFamily: 'Dana' }]}>
-                حساب کاربری ندارید؟ ثبت نام
+                {appName}
+                {/* حساب کاربری ندارید؟ ثبت نام */}
               </Text>
             </Animatable.View>
           </Animatable.View>

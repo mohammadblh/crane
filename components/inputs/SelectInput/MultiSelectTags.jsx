@@ -157,28 +157,6 @@ const MultiSelectTags = ({
                 </Text>
             </TouchableOpacity>
 
-            {/* Tags Section */}
-            {selectedValues.length > 0 && (
-                <View style={tw`flex-row flex-wrap mt-3`}>
-                    {selectedValues.map((value, index) => (
-                        <View
-                            key={index}
-                            style={tw`bg-yellow-50 border-2 border-yellow-400 rounded-full px-4 py-2 flex-row items-center ml-2 mb-2`}
-                        >
-                            <TouchableOpacity
-                                onPress={() => handleRemoveTag(value)}
-                                activeOpacity={0.7}
-                            >
-                                <X size={16} color="#CA8A04" strokeWidth={2.5} />
-                            </TouchableOpacity>
-                            <Text style={tw`text-yellow-700 text-sm font-bold mr-2`}>
-                                {value}
-                            </Text>
-                        </View>
-                    ))}
-                </View>
-            )}
-
             {/* لیست بازشو */}
             {isOpen && (
                 <Animated.View
@@ -192,7 +170,7 @@ const MultiSelectTags = ({
                     }}
                 >
                     <View
-                        style={tw`bg-white border border-gray-300 rounded-b-xl overflow-hidden`}
+                        style={[tw`bg-white border border-gray-300 rounded-b-xl overflow-hidden`, {maxHeight: 135}]}
                     >
                         <ScrollView showsVerticalScrollIndicator={false}>
                             {options.map((option, index) => {
@@ -232,6 +210,29 @@ const MultiSelectTags = ({
                     </View>
                 </Animated.View>
             )}
+
+            {/* Tags Section */}
+            {selectedValues.length > 0 && (
+                <View style={tw`flex-row flex-wrap mt-3`}>
+                    {selectedValues.map((value, index) => (
+                        <View
+                            key={index}
+                            style={tw`bg-yellow-50 border-2 border-yellow-400 rounded-full px-4 py-2 flex-row items-center ml-2 mb-2`}
+                        >
+                            <TouchableOpacity
+                                onPress={() => handleRemoveTag(value)}
+                                activeOpacity={0.7}
+                            >
+                                <X size={16} color="#CA8A04" strokeWidth={2.5} />
+                            </TouchableOpacity>
+                            <Text style={tw`text-yellow-700 text-sm font-bold mr-2`}>
+                                {value}
+                            </Text>
+                        </View>
+                    ))}
+                </View>
+            )}
+
         </View>
     );
 };

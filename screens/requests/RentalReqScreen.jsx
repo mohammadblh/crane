@@ -4,6 +4,18 @@ import tw from 'tailwind-react-native-classnames';
 import { ArrowRight } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
+const getColor = (key) => {
+    switch (key) {
+        case 'در انتظار قیمت گذاری':
+            return 'bg-yellow-500'
+        case 'در انتظار قیمت گذاری':
+            return 'bg-yellow-500'
+    
+        default:
+            break;
+    }
+}
+
 export default function RentalReqScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
@@ -12,7 +24,7 @@ export default function RentalReqScreen() {
 
     const rentalData = {
         status: 'در انتظار قیمت گذاری',
-        statusColor: 'orange',
+        statusColor: 'bg-yellow-500',
         date: '۱۴۰۳/۰۸/۲۷',
         address: 'کاشان بلوار مطهری میدان مدخل شهر خیابان نظیر',
         installation: {
@@ -47,11 +59,11 @@ export default function RentalReqScreen() {
 
             {/* Header */}
             <View style={tw`bg-white border-b border-gray-200 px-4 py-4 flex-row items-center justify-between`}>
+                <View style={tw`w-6`} />
+                <Text style={tw`text-lg font-bold text-gray-800`}>اجاره موردی</Text>
                 <TouchableOpacity onPress={() => router.back()}>
                     <ArrowRight size={24} color="#374151" />
                 </TouchableOpacity>
-                <Text style={tw`text-lg font-bold text-gray-800`}>اجاره موردی - #{id}</Text>
-                <View style={tw`w-6`} />
             </View>
 
             <ScrollView style={tw`flex-1`}>

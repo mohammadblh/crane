@@ -63,7 +63,7 @@ export default function PaymentSection({
             </View>
 
             {/* Two Selects Row */}
-            <View style={tw`flex-row mb-4`}>
+            <View style={[tw`flex-row mb-4 gap-3`, {gap: 20}]}>
                 {/* Grace Period Select */}
                 {gracePeriodField && (
                     <View style={tw`flex-1 ml-2`}>

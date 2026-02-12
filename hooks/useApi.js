@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { DEV_MODE, MOCK_DATA, MOCK_DELAY } from '../config/dev';
+import { Redirect } from 'expo-router';
 
 // ایجاد instance از axios
 const apiClient = axios.create();
@@ -14,56 +15,53 @@ const mockDelay = (data) => {
 };
 
 // تابع اصلی برای ارسال درخواست
-export const sendRequest = async (operation, additionalParams = {}) => {
+export const sendRequest = async (operation, additionalParams = {}) => {  
   try {
-    const baseUrl = 'https://rasad.feham.ir/modules.php';
-    // const fullUrl = `${baseUrl}/modules.php`;
+    const baseUrl = "https://crane.feham.ir";
 
-    // ایجاد FormData
-    const formData = new FormData();
-    
-    // پارامترهای ثابت
-    formData.append('newdb', 'ss');
-    formData.append('name', 'Icms');
-    formData.append('file', 'json');
-    formData.append('op', operation);
-    
-    // پارامترهای اضافی
-    Object.keys(additionalParams).forEach(key => {
-      if (additionalParams[key] !== undefined && additionalParams[key] !== null) {
-        formData.append(key, additionalParams[key]);
-      }
-    });
+    // -----------------------
+    // پارامترهای ثابت GET
+    // -----------------------
+    const params = {
+      name: "Icms",
+      file: "json",
+      op: operation,
+      ...additionalParams
+    };
 
-    console.log('Sending request to:', baseUrl);
-    console.log('Operation:', operation);
-    console.log('Additional params:', additionalParams);
-
-    const response = await apiClient.post(baseUrl, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Accept': 'application/json',
-      },
+    const response = await apiClient.get(baseUrl, {
+      params,
+      // headers: {
+      //   "Accept": "application/json",
+      //   "Accept-Charset": "utf8",
+      // },
       timeout: 15000,
+      responseType: "arraybuffer",
     });
 
-    return response.data;
+
+    const text = new TextDecoder("utf-8").decode(new Uint8Array(response.data));
+    if(!text) return {};
+    const json = JSON.parse(text);
+    return json;
+    // return response.data;
 
   } catch (error) {
-    console.error('Request failed:', error);
-    
+    console.error("Request failed:", error);
+
     if (error.response) {
-      // سرور پاسخ داده اما با خطا
-      throw new Error(`خطای سرور: ${error.response.status}`);
+      console.error(`خطای سرور: ${error.response.status}`);
+      // throw new Error(`خطای سرور: ${error.response.status}`);
     } else if (error.request) {
-      // درخواست ارسال شده اما پاسخی دریافت نشده
-      throw new Error('عدم اتصال به سرور');
+      console.error("عدم اتصال به سرور");
+      // throw new Error("عدم اتصال به سرور");
     } else {
-      // خطای دیگر
-      throw new Error(error.message || 'خطای ناشناخته');
+      console.error(error.message || "خطای ناشناخته");
+      // throw new Error(error.message || "خطای ناشناخته");
     }
   }
 };
+
 
 // هوک برای استفاده در کامپوننت‌ها
 export const useApi = () => {
@@ -78,14 +76,14 @@ export const api = {
   getVersion: () => sendRequest('m_version'),
   
   // لاگین
-  login: async (username, mob) => {
+  login: async (mob) => {
     if (DEV_MODE) {
       console.log('🔧 DEV MODE: Using mock login data');
       console.log('Mock login with:', { username, mob });
       return mockDelay(MOCK_DATA.login);
     }
     return sendRequest('m_login', {
-      username,
+      // username,
       mob
     });
   },
@@ -130,13 +128,45 @@ export const api = {
   }),
 
   // دریافت فرم
-  forms: async (finger) => {
+  rentalShort: async (finger) => {
     if (DEV_MODE) {
-      return mockDelay(MOCK_DATA.form);
+      return mockDelay(MOCK_DATA.rentalShort);
     }
-    return sendRequest('m_forms', {
+    return sendRequest('m_rentalShort', {
       finger
     });
+  },
+
+  rentalLong: async (finger) => {
+    if (DEV_MODE) {
+      return mockDelay(MOCK_DATA.rentalLong);
+    }
+    return sendRequest('m_rentalProject', {
+      finger
+    });
+  },
+
+  rentalProject: async (finger) => {
+    if (DEV_MODE) {
+      return mockDelay(MOCK_DATA.rentalProject);
+    }
+    return sendRequest('m_rentalProject', {
+      finger
+    });
+  },
+
+  getBanner: async (finger) => {
+    // if (DEV_MODE) {
+    //   return mockDelay(MOCK_DATA.rentalProject);
+    // }
+    return sendRequest('m_banner', { finger });
+  },
+
+  forms: async (finger) => {
+    // if (DEV_MODE) {
+    //   return mockDelay(MOCK_DATA.rentalProject);
+    // }
+    return sendRequest('m_forms', { finger });
   },
 
   // ارسال کار (درخواست اجاره)

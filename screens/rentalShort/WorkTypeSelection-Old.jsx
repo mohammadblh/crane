@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 import { Check, ChevronDown, Trash2 } from 'lucide-react-native';
-import AddWorkScreen from '../../screens/rentalShort/AddWork';
+import AddWorkScreen from './AddWork';
 
 export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRemoveItem }) {
-    // const [workTypeItem, setWorkTypeItem] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedWorkType, setSelectedWorkType] = useState('loading'); // Default to loading
     const [expandedCard, setExpandedCard] = useState(null);
@@ -30,11 +29,7 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
     //     );
     // }
 
-    const workTypeItem = jsonComp.sections ? 
-        Object.values(jsonComp.sections[0].options) : [];
-
-    console.log('jsonComp.workTypeItem',workItems)
-    console.log('jsonComp.workTypeItem',workItems.length , jsonComp.numrow)
+    console.log('jsonComp.workTypeItem',jsonComp.workTypeItem)
 
     return (
         <View style={tw`px-4 mb-4`}>
@@ -126,7 +121,7 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
             })}
 
             {/* Add Work Button */}
-            {workItems.length < jsonComp.numrow && <View style={!workItems.length && tw`m-auto top-full`}>
+            <View style={!workItems.length && tw`m-auto top-full`}>
                 {!workItems.length && <Text style={tw`text-xl text-center font-bold mb-1`}>هیچ نوع کاری وجود ندارد</Text>}
                 {!workItems.length && <Text style={tw`text-center mb-4`}>نوع کار مورد نظر خود را از دکمه زیر اضافه کنید</Text>}
                 <TouchableOpacity
@@ -138,7 +133,7 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
                         افزودن کار
                     </Text>
                 </TouchableOpacity>
-            </View>}
+            </View>
 
             {/* Modal */}
             <Modal
@@ -166,8 +161,7 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
 
                             {/* Radio Options */}
                             <View style={tw`mb-6`}>
-                                {workTypeItem.map((item, key) => (
-                                // {jsonComp.workTypeItem.map((item, key) => (
+                                {jsonComp.workTypeItem.map((item, key) => (
                                     <TouchableOpacity
                                         key={key}
                                         style={tw`flex-row items-center justify-between py-3 border-b border-gray-100`}

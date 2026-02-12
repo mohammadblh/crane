@@ -86,7 +86,7 @@ const Select1 = ({
     const dropdownHeight = Math.min(
         options.length * 48,
         maxVisibleItems * 48,
-        SCREEN_HEIGHT * 0.3
+        SCREEN_HEIGHT * 0.2
     );
 
     const translateY = slideAnim.interpolate({
@@ -158,10 +158,10 @@ const Select1 = ({
                         zIndex: 1
                     }}
                 >
+                    <ScrollView showsVerticalScrollIndicator={!isWeb}>
                     <View
                         style={tw`bg-white border border-gray-300 rounded-b-xl overflow-hidden`}
                     >
-                        <ScrollView showsVerticalScrollIndicator={false}>
                             {options.map((option, index) => (
                                 <TouchableOpacity
                                     key={index}
@@ -185,8 +185,8 @@ const Select1 = ({
                                     </Text>
                                 </TouchableOpacity>
                             ))}
-                        </ScrollView>
                     </View>
+                        </ScrollView>
                 </Animated.View>
             )}
 
