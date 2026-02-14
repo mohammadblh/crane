@@ -23,10 +23,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../hooks/useApi';
 import { useApp } from '../contexts/AppContext';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const CraneLoginScreen = () => {
   const { version, logo, images, appName } = useApp();
+
+  // محاسبه ارتفاع اسلایدر به صورت responsive
+  const sliderHeight = width > 768 ? height * 0.40 : 256;
   // const [username, setUsername] = useState("");
   const [mobile, setMobile] = useState("");
   // const [showPassword, setShowPassword] = useState(false);
@@ -78,7 +81,7 @@ const CraneLoginScreen = () => {
 
       console.log("Login response:", response);
 
-      if(!response.success) throw new Error(response.message);
+      if (!response.success) throw new Error(response.message);
       // Store finger, username and mobile for OTP screen
       // await AsyncStorage.setItem('temp_username', username);
       await AsyncStorage.setItem('user_finger', response.finger);
@@ -111,12 +114,12 @@ const CraneLoginScreen = () => {
         animation="fadeIn"
         duration={1000}
         delay={index * 300}
-        style={{ width: width - 48, height: 250 }}
+        style={{ width: width - 48, height: sliderHeight, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6' }}
       >
         <Image
-          style={tw`w-full h-full rounded-2xl`}
+          style={tw`w-full h-full`}
           source={item}
-          resizeMode="cover"
+          resizeMode="contain"
         />
       </Animatable.View>
     );
@@ -179,7 +182,10 @@ const CraneLoginScreen = () => {
           <Animatable.View
             animation="zoomIn"
             duration={1500}
-            style={tw`h-64 my-5 rounded-2xl overflow-hidden bg-white shadow-lg`}
+            style={[
+              tw`my-5 rounded-2xl overflow-hidden bg-white shadow-lg`,
+              { height: sliderHeight }
+            ]}
           >
             <FlatList
               data={images}

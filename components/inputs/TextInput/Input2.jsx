@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 import { X } from 'lucide-react-native';
 
-export default function Input2({ field, value, onChange }) {
+export default function Input2({ field, value, onChange, type = 'default' }) {
     const handleClear = () => {
         if (onChange) onChange("");
     };
@@ -26,7 +26,12 @@ export default function Input2({ field, value, onChange }) {
                     placeholder={field.placeholder || ""}
                     placeholderTextColor="#9CA3AF"
                     value={value}
-                    onChangeText={onChange}
+                    onChangeText={(text) => {
+                        const numeric = text.replace(/[^0-9]/g, '');
+
+                        onChange(type === 'number' ? numeric : text);
+                    }}
+                    keyboardType={type === 'number' ? 'numeric' : 'default'}
                 />
 
                 <Text style={tw`absolute bg-white px-1 right-3 -top-1/4 transform -translate-y-1/2 text-gray-500 text-xs`}>

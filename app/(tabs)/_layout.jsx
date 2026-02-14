@@ -106,6 +106,19 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="onBording"
+        options={{
+          title: 'آشنایی با سامانه',
+          tabBarIcon: ({ size, color, focused }) => (
+            <Ionicons
+              name={focused ? 'information-circle' : 'information-circle-outline'}
+              size={size + 2}
+              color={color}
+            />
+          ),
+        }}
+      />
       {/* صفحه پروفایل مخفی */}
       <Tabs.Screen
         name="profile"

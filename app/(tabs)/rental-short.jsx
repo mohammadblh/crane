@@ -25,7 +25,7 @@ import RenderForm from '@/components/FormRenderer/RenderForm';
 
 export default function RentalShortScreen() {
     const { rentalShort } = useApp();
-    
+
     const [currentStep, setCurrentStep] = useState(1);
     const [showAddWork, setShowAddWork] = useState(null);
     const [nextDisabled, setNextDisabled] = useState(false);
@@ -317,9 +317,10 @@ export default function RentalShortScreen() {
     }
 
     const renderSteps = () => {
+        console.log('renderSteps', currentStep, rentalShort.steps[currentStep - 1])
         switch (currentStep) {
             case 1:
-                return <WorkshopSelection jsonComp={rentalShort.steps[0]} />        
+                return <WorkshopSelection jsonComp={rentalShort.steps[0]} />
 
             case 2:
                 return <WorkTypeSelection
@@ -334,9 +335,9 @@ export default function RentalShortScreen() {
                     jsonComp={rentalShort.steps[2]}
                     onChange={(data) => setAdditionalServices(data)}
                 />
-        
+
             default:
-                return <RenderForm data={rentalShort.steps[currentStep-1].sections} 
+                return <RenderForm data={rentalShort.steps[currentStep - 1].sections}
                 // onChange={handleFormChange} 
                 />
         }

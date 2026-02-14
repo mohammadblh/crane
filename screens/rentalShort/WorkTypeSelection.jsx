@@ -14,7 +14,6 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
     // const handleAddNewItem = (data) => {
     //     // setPendingWorkType(type);
     //     // setShowAddWork(true);
-    //     console.log('handleAddWorkStart::data', data)
     //     // setWorkItems()
     // };
 
@@ -33,8 +32,6 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
     const workTypeItem = jsonComp.sections ? 
         Object.values(jsonComp.sections[0].options) : [];
 
-    console.log('jsonComp.workTypeItem',workItems)
-    console.log('jsonComp.workTypeItem',workItems.length , jsonComp.numrow)
 
     return (
         <View style={tw`px-4 mb-4`}>

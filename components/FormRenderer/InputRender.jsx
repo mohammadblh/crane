@@ -17,7 +17,9 @@ export default function InputRender({ field, value, onChange }) {
 
         case 3:
             return <TextArea field={field} value={value} onChange={onChange} />;
-
+ 
+        case 4:
+            return <Input2 field={field} value={value} onChange={onChange} type='number'  />;
         default:
             return (
                 <Text>استایل ورودی پشتیبانی نمی‌شود: {field.style}</Text>

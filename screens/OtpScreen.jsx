@@ -140,7 +140,7 @@ const CraneOTPScreen = () => {
             <Image
             style={tw`w-full h-full rounded-2xl`}
             source={item}
-            resizeMode="cover"
+            resizeMode="contain"
             />
         </Animatable.View>
         );
@@ -276,8 +276,8 @@ const CraneOTPScreen = () => {
                             ))}
                         </View>
 
-                        <TouchableOpacity onPress={() => router.replace('/login')}>
                         {/* <TouchableOpacity onPress={() => router.back()}> */}
+                        <TouchableOpacity onPress={() => router.replace('/login')}>
                             <Animatable.Text
                                 animation="fadeIn"
                                 duration={600}

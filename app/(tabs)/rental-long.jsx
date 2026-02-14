@@ -11,6 +11,9 @@ import WorkshopSelection from '../../screens/rentalShort/WorkshopSelection';
 import AdditionalServicesSelection from '../../screens/rentalShort/AdditionalServicesSelection';
 import Loading from '../../components/Loading';
 import StepProgress from '../../components/StepProgress';
+import AddWorkScreen from '../../screens/rentalShort/AddWork';
+import RenderForm from '@/components/FormRenderer/RenderForm';
+
 import { api } from '../../hooks/useApi';
 
 const getHeaderTitle = (currentStep) => {
@@ -32,6 +35,10 @@ export default function RentalLongScreen() {
     const [workItems, setWorkItems] = useState([]);
     const [pendingWorkType, setPendingWorkType] = useState(null);
     const [previousStep, setPreviousStep] = useState(1);
+    const [formData, setFormData] = useState({
+        workshopName: '', cat1: '', cat2: '',
+        works: []
+    });
 
     const [additionalServices, setAdditionalServices] = useState({});
 
@@ -48,33 +55,34 @@ export default function RentalLongScreen() {
     }, [currentStep]);
     
 
-    // get fields and load workItems from AsyncStorage
-    // useEffect(() => {
-    //     const loadData = async () => {
-    //         // Load rental short data
-    //         let res = await AsyncStorage.getItem('rentalLong');
-    //         res = JSON.parse(res);
+    const handleAddWorkStart = (type) => {
+        console.log('type handle add work:', type)
+        setPendingWorkType(type);
+        setShowAddWork(type);
+    };
 
-    //         if(!res) {
-    //             const finger = await AsyncStorage.getItem('user_finger');
-    //             res = await api.rentalLong(finger);
-    //         }
+    const handleRemoveItem = async (id) => {
+        const updatedWorkItems = workItems.filter(item => item.id !== id);
+        setWorkItems(updatedWorkItems);
+        setFormData(prev => ({
+            ...prev,
+            works: updatedWorkItems
+        }));
 
-    //         // setRentalLong(res.data);
-
-    //         // Load workItems from AsyncStorage
-    //         // const savedWorkItems = await AsyncStorage.getItem('workItems');
-    //         // if (savedWorkItems) {
-    //         //     const parsedWorkItems = JSON.parse(savedWorkItems);
-    //         //     setWorkItems(parsedWorkItems);
-    //         //     setFormData(prev => ({
-    //         //         ...prev,
-    //         //         works: parsedWorkItems
-    //         //     }));
-    //         // }
-    //     };
-    //     loadData();
-    // }, []);
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('workItems', JSON.stringify(updatedWorkItems));
+    };
+    
+    // Check workItems to enable/disable next button
+    useEffect(() => {
+        if (currentStep === 2) {
+            // At step 2 (work type selection), need at least one work item
+            setNextDisabled(workItems.length === 0);
+        } else {
+            // Other steps can proceed
+            setNextDisabled(false);
+        }
+    }, [workItems, currentStep]);
 
     // Hide tab bar when in this screen
     useLayoutEffect(() => {
@@ -84,14 +92,73 @@ export default function RentalLongScreen() {
 
         return () => { };
     }, [navigation]);
+
+    const handleAddNewItem = async (data) => {
+        console.log('handleAddNewItem data:', data);
+        const newItem = {
+            id: Date.now(),
+            title: getTitleForType(pendingWorkType, workItems.length + 1),
+            type: pendingWorkType,
+            formData: data,
+            ...getColorsForType(pendingWorkType)
+        };
+
+        const updatedWorkItems = [...workItems, newItem];
+        setWorkItems(updatedWorkItems);
+        setFormData(prev => ({
+            ...prev,
+            works: updatedWorkItems
+        }));
+
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('workItems', JSON.stringify(updatedWorkItems));
+
+        setShowAddWork(false);
+        setPendingWorkType(null);
+    };
     
+    const getTitleForType = (type, index) => {
+        switch (type) {
+            case 'نصب': return `نصب شماره ${index}`;
+            case 'بارگیری': return `بارگیری شماره ${index}`;
+            case 'تخلیه': return `تخلیه شماره ${index}`;
+            default: return `${type} شماره ${index}`;
+        }
+    };
+
+    const getColorsForType = (type) => {
+        switch (type) {
+            case 'نصب':
+                return { color: 'yellow', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-300' };
+            case 'بارگیری':
+                return { color: 'blue', bgColor: 'bg-blue-50', borderColor: 'border-blue-300' };
+            case 'تخلیه':
+                return { color: 'green', bgColor: 'bg-green-50', borderColor: 'border-green-300' };
+            default:
+                return { color: 'gray', bgColor: 'bg-gray-50', borderColor: 'border-gray-300' };
+        }
+    };
+
+    const getHeaderTitle = () => {
+        switch (currentStep) {
+            case 1: return 'انتخاب کارگاه';
+            case 2: return 'نوع کار';
+            case 3: return 'خدمات اضافی';
+            default: return 'اجاره موردی';
+        }
+    };
     
     const handleNext = () => {
         if (currentStep < rentalLong.steps.length) {
             setCurrentStep(currentStep + 1);
         } else {
             // Submit request on step 3
-            submitRequest();
+            console.log('Submitting request with data:', {
+                workshop: formData.workshopName,
+                category1: formData.cat1,
+                works: formData.works
+            });
+            // submitRequest();
         }
     };
 
@@ -114,7 +181,26 @@ export default function RentalLongScreen() {
         }
     };
 
+
+    if (showAddWork) {
+        const items = rentalLong.steps[1].sections.slice(1);
+        // const items = rentalShort.steps[1].sections;
+        // if (items && items[showAddWork] && items[showAddWork].length)
+        if (items && items.length)
+            return (
+                <AddWorkScreen
+                    onBack={() => setShowAddWork(false)}
+                    onSubmit={handleAddNewItem}
+                    items={items}
+                    // items={items[showAddWork]}
+                    addWorkName={showAddWork}
+                // workType={pendingWorkType}
+                />
+            );
+    }
+
     const renderSteps = () => {
+        console.log('rentalLong:', rentalLong);
         switch (currentStep) {
             case 1:
                 return <WorkshopSelection jsonComp={rentalLong.steps[0]} />        
@@ -127,11 +213,11 @@ export default function RentalLongScreen() {
                     onRemoveItem={handleRemoveItem}
                 />
 
-            case 3:
-                return <AdditionalServicesSelection
-                    jsonComp={rentalLong.steps[2]}
-                    onChange={(data) => setAdditionalServices(data)}
-                />
+            // case 3:
+            //     return <AdditionalServicesSelection
+            //         jsonComp={rentalLong.steps[2]}
+            //         onChange={(data) => setAdditionalServices(data)}
+            //     />
         
             default:
                 return <RenderForm data={rentalLong.steps[currentStep-1].sections} 
@@ -186,7 +272,7 @@ export default function RentalLongScreen() {
             <View
                 style={tw`fixed flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`}
             >
-                {currentStep === 3 ? <TouchableOpacity
+                {currentStep === rentalLong.steps.length ? <TouchableOpacity
                     style={tw`flex-1 bg-yellow-500 py-3 rounded-lg shadow-lg`}
                     onPress={handleNext}
                 >

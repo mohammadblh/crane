@@ -13,6 +13,7 @@ import RenderForm from '@/components/FormRenderer/RenderForm';
 export default function WorkshopSelection({ jsonComp }) {
     const [selectedWorkshopType, setSelectedWorkshopType] = useState('existing');
 
+    
     const Dropdown = ({ items, isVisible, onSelect, onClose, selectedValue }) => {
         return (
             <Modal
@@ -107,3 +108,4 @@ export default function WorkshopSelection({ jsonComp }) {
         </View>
     );
 }
+

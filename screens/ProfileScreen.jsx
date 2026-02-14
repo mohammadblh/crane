@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, TextInput, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, use } from 'react';
+import { View, Text, TouchableOpacity, StatusBar, ScrollView, TextInput, ActivityIndicator, } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'tailwind-react-native-classnames';
 import { ArrowRight, Edit2, Camera, User } from 'lucide-react-native';
 import { api } from '../hooks/useApi';
@@ -12,18 +13,32 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
-    username: '',
-    phone: '',
-    nationalId: '',
-    birthDate: '',
-    postalCode: ''
+    fname: '',
+    lname: '',
+    mobile: '',
+    codem: '',
+    aid: ''
   });
+  const [editData, setEditData] = useState();
 
-  console.log("profile>>",)
 
-  const [editData, setEditData] = useState({ ...profileData });
+
+  // دریافت تنها فیلد‌های تغییر یافته
+  const getChangedFields = () => {
+    const changed = {};
+    Object.keys(profileData).forEach(key => {
+      if (profileData[key] !== editData?.[key]) {
+        changed[key] = editData[key];
+      }
+    });
+    return changed;
+  };
+
+  useEffect(() => {
+    if (profileData) {
+      setEditData({ ...profileData });
+    }
+  }, [profileData]);
 
   // بارگذاری اطلاعات پروفایل
   useEffect(() => {
@@ -49,22 +64,23 @@ export default function ProfileScreen() {
       // فراخوانی API
       const response = await api.getProfile(finger);
 
-      console.log('Profile response:', response);
+      console.log('Profile response:', response.prof);
 
-      if (response.success && response.data) {
-        const data = response.data;
-        const newProfileData = {
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          username: data.username || '',
-          phone: data.phone || '',
-          nationalId: data.nationalId || '',
-          birthDate: data.birthDate || '',
-          postalCode: data.postalCode || ''
-        };
+      if (response.success && response.prof) {
+        const data = response.prof;
 
-        setProfileData(newProfileData);
-        setEditData(newProfileData);
+        console.log(data, 'data');
+
+        setProfileData({
+          fname: data.fname,
+          lname: data.lname,
+          mobile: data.mobile,
+          codem: data.codem,
+          aid: data.aid
+        });
+
+        // setProfileData(newProfileData);
+        setEditData({ ...profileData });
       } else {
         setError('خطا در دریافت اطلاعات پروفایل');
       }
@@ -76,9 +92,40 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSave = () => {
-    setProfileData({ ...editData });
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      const changedFields = getChangedFields();
+
+      // اگر تغییری نکرده باشید
+      if (Object.keys(changedFields).length === 0) {
+        console.log('ℹ️ هیچ تغییری انجام نشده است');
+        setIsEditing(false);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('📤 تغییرات برای ارسال:', changedFields);
+
+      const finger = await AsyncStorage.getItem('user_finger');
+      if (finger) {
+        const res = await api.UpdateProfile(finger, changedFields);
+        console.log('✅ Update profile response:', res);
+
+        if (res.success) {
+          setProfileData({ ...editData });
+          setIsEditing(false);
+          setError('');
+        } else {
+          setError(res.message || 'خطا در بروزرسانی پروفایل');
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error saving profile:', err);
+      setError(err.message || 'خطا در ذخیره‌سازی');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -91,19 +138,21 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+    <SafeAreaView style={tw`flex-1 bg-white`} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
+
       <View style={tw`bg-white border-b border-gray-200 px-4 py-4 flex-row items-center justify-between`}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <ArrowRight size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text style={tw`text-lg font-bold text-gray-800`}>پروفایل</Text>
         <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
           <Edit2 size={22} color="#FBC02D" />
         </TouchableOpacity>
+        <Text style={tw`text-lg font-bold text-gray-800`}>پروفایل</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <ArrowRight size={24} color="#374151" />
+        </TouchableOpacity>
       </View>
+
 
       <ScrollView style={tw`flex-1`}>
         <View style={tw`px-4 py-6`}>
@@ -114,7 +163,7 @@ export default function ProfileScreen() {
                 <User size={64} color="#FFF" strokeWidth={2} />
               </View>
               <TouchableOpacity
-                style={tw`absolute bottom-0 right-0 w-10 h-10 bg-yellow-500 rounded-full items-center justify-center border-3 border-white shadow-lg`}
+                style={tw`absolute bottom-0 right-0 w-10 h-10 bg-yellow-500 rounded-full items-center justify-center border-2 border-white shadow-lg`}
                 activeOpacity={0.8}
               >
                 <Camera size={20} color="#FFF" strokeWidth={2.5} />
@@ -122,7 +171,7 @@ export default function ProfileScreen() {
             </View>
             {!isEditing && (
               <Text style={tw`text-gray-800 font-bold text-xl mt-4`}>
-                {profileData.firstName} {profileData.lastName}
+                {profileData.fname} {profileData.lname}
               </Text>
             )}
           </View>
@@ -135,12 +184,12 @@ export default function ProfileScreen() {
               {isEditing ? (
                 <TextInput
                   style={tw`bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-base text-right`}
-                  value={editData.firstName}
-                  onChangeText={(value) => updateField('firstName', value)}
+                  value={editData.fname}
+                  onChangeText={(value) => updateField('fname', value)}
                 />
               ) : (
                 <View style={tw`bg-gray-50 rounded-xl px-4 py-3`}>
-                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.firstName}</Text>
+                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.fname}</Text>
                 </View>
               )}
             </View>
@@ -151,18 +200,18 @@ export default function ProfileScreen() {
               {isEditing ? (
                 <TextInput
                   style={tw`bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-base text-right`}
-                  value={editData.lastName}
-                  onChangeText={(value) => updateField('lastName', value)}
+                  value={editData.lname}
+                  onChangeText={(value) => updateField('lname', value)}
                 />
               ) : (
                 <View style={tw`bg-gray-50 rounded-xl px-4 py-3`}>
-                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.lastName}</Text>
+                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.lname}</Text>
                 </View>
               )}
             </View>
 
             {/* Username */}
-            <View style={tw`mb-4`}>
+            {/* <View style={tw`mb-4`}>
               <Text style={tw`text-gray-600 text-sm mb-2 text-right`}>نام کاربری</Text>
               {isEditing ? (
                 <TextInput
@@ -175,7 +224,7 @@ export default function ProfileScreen() {
                   <Text style={tw`text-gray-800 text-base text-right`}>{profileData.username}</Text>
                 </View>
               )}
-            </View>
+            </View> */}
 
             {/* Phone */}
             <View style={tw`mb-4`}>
@@ -183,19 +232,19 @@ export default function ProfileScreen() {
               {isEditing ? (
                 <TextInput
                   style={tw`bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-base text-right`}
-                  value={editData.phone}
-                  onChangeText={(value) => updateField('phone', value)}
+                  value={editData.mobile}
+                  onChangeText={(value) => updateField('mobile', value)}
                   keyboardType="phone-pad"
                 />
               ) : (
                 <View style={tw`bg-gray-50 rounded-xl px-4 py-3`}>
-                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.phone}</Text>
+                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.mobile}</Text>
                 </View>
               )}
             </View>
 
             {/* Birth Date */}
-            <View style={tw`mb-4`}>
+            {/* <View style={tw`mb-4`}>
               <Text style={tw`text-gray-600 text-sm mb-2 text-right`}>تاریخ تولد</Text>
               {isEditing ? (
                 <TextInput
@@ -210,7 +259,7 @@ export default function ProfileScreen() {
                   <Text style={tw`text-gray-800 text-base text-right`}>{profileData.birthDate}</Text>
                 </View>
               )}
-            </View>
+            </View> */}
 
             {/* National ID */}
             <View style={tw`mb-4`}>
@@ -218,13 +267,13 @@ export default function ProfileScreen() {
               {isEditing ? (
                 <TextInput
                   style={tw`bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-base text-right`}
-                  value={editData.nationalId}
-                  onChangeText={(value) => updateField('nationalId', value)}
+                  value={editData.codem}
+                  onChangeText={(value) => updateField('codem', value)}
                   keyboardType="numeric"
                 />
               ) : (
                 <View style={tw`bg-gray-50 rounded-xl px-4 py-3`}>
-                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.nationalId}</Text>
+                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.codem}</Text>
                 </View>
               )}
             </View>
@@ -235,13 +284,13 @@ export default function ProfileScreen() {
               {isEditing ? (
                 <TextInput
                   style={tw`bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-base text-right`}
-                  value={editData.postalCode}
-                  onChangeText={(value) => updateField('postalCode', value)}
+                  value={editData.aid}
+                  onChangeText={(value) => updateField('aid', value)}
                   keyboardType="numeric"
                 />
               ) : (
                 <View style={tw`bg-gray-50 rounded-xl px-4 py-3`}>
-                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.postalCode}</Text>
+                  <Text style={tw`text-gray-800 text-base text-right`}>{profileData.aid}</Text>
                 </View>
               )}
             </View>

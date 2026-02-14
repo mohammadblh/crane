@@ -76,14 +76,14 @@ export const api = {
   getVersion: () => sendRequest('m_version'),
   
   // لاگین
-  login: async (mob) => {
+  login: async (mob , username) => {
     if (DEV_MODE) {
       console.log('🔧 DEV MODE: Using mock login data');
       console.log('Mock login with:', { username, mob });
       return mockDelay(MOCK_DATA.login);
     }
     return sendRequest('m_login', {
-      // username,
+      username,
       mob
     });
   },
@@ -110,6 +110,18 @@ export const api = {
     }
     return sendRequest('m_profile', {
       finger
+    });
+  },
+  
+  UpdateProfile: async (finger, data) => {
+    if (DEV_MODE) {
+      console.log('🔧 DEV MODE: Using mock profile data');
+      console.log('Mock profile with finger:', finger);
+      return mockDelay(MOCK_DATA.profile);
+    }
+    return sendRequest('m_profile', {
+      finger,
+      ...data
     });
   },
   

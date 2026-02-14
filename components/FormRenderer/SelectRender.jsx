@@ -2,10 +2,12 @@
 import React from 'react';
 import { Text } from 'react-native';
 import Select1 from '../inputs/SelectInput/Select1';
+import SelectDual from '../inputs/SelectInput/SelectDual';
 import PaymentSection from '../inputs/SelectInput/PaymentSection';
 import MultiSelectTags from '../inputs/SelectInput/MultiSelectTags';
 import StarRating from '../inputs/SelectInput/StarRating';
 import ButtonSelect from '../inputs/SelectInput/ButtonSelect';
+
 
 export default function SelectRender({ field, value, onChange }) {
     switch (field.style) {
@@ -13,10 +15,12 @@ export default function SelectRender({ field, value, onChange }) {
             return <Select1
                 label={field.title}
                 placeholder={field.placeholder}
-                options={field.options}
+                options={ Object.values(field.options)}
+                // options={field.options}
                 selectedValue={value}
                 onSelect={onChange}
-                itemKey={field.sectionId}
+                itemKey={field.title}
+                // itemKey={field.sectionId}
                 maxVisibleItems={3}
             />;
 
@@ -53,6 +57,21 @@ export default function SelectRender({ field, value, onChange }) {
                 value={value}
                 onChange={onChange}
             />;
+
+        case 10:
+            return (
+               <SelectDual
+                    label={field.title}
+                    placeholder={field.placeholder}
+                    options={Object.values(field.options)}
+                    options2={field.options2}
+                    selectedValue={value}
+                    onSelect={onChange}
+                    itemKey={field.title}
+                    // itemKey={field.sectionId}
+                    maxVisibleItems={3}
+                />
+            )
 
         default:
             return (

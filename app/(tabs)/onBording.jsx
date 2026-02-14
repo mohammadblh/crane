@@ -233,10 +233,10 @@ import { useState, useRef , useLayoutEffect} from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useRouter ,useNavigation, } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
-import { colors, spacing, typography, borderRadius } from '../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
+import { colors, spacing, typography, borderRadius } from '../../constants/theme';
 import { Sparkles, Zap, Heart } from 'lucide-react-native';
-import bg from '../assets/images/crane2.png';
+import bg from '../../assets/images/crane2.png';
 
 const { width, height } = Dimensions.get('window');
 

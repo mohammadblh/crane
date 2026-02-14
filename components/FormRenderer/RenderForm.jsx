@@ -53,6 +53,16 @@ export default function RenderForm({ data, onChange }) {
           />
         );
 
+      case 3:
+        field.style = 4; // Force number input style for type 3
+        return (
+          <InputRender
+            field={field}
+            value={formData[field.sectionId]}
+            onChange={(value) => handleFieldChange(field.sectionId, value)}
+          />
+        );
+
       case 4:
         return (
           <SelectRender
@@ -88,7 +98,18 @@ export default function RenderForm({ data, onChange }) {
           onChange={(value) => handleFieldChange(field.sectionId, value)}
         />
 
-      case 10: // Map
+      case 10: // select dual
+        field.style = 10; 
+        return (
+          <SelectRender
+            field={field}
+            value={formData[field.sectionId]}
+            onChange={(value) => handleFieldChange(field.sectionId, value)}
+          />
+        );
+
+      case 36: // Map
+      // case 10: // Map
         return (
           <MapView
             field={field}
@@ -104,8 +125,8 @@ export default function RenderForm({ data, onChange }) {
 
   return (
     <View style={{ padding: 10 }}>
-      {data.map((field) => (
-        <View key={field.sectionId} style={{ marginBottom: 10 }}>
+      {data.map((field  , i ) => (
+        <View key={i} style={{ marginBottom: 10 }}>
           {renderField(field)}
         </View>
       ))}
