@@ -10,14 +10,19 @@ import ButtonSelect from '../inputs/SelectInput/ButtonSelect';
 
 
 export default function SelectRender({ field, value, onChange }) {
+    const sendkey = (options, val) => {
+        return Object.entries(options).find(([key, value]) => value === val)?.[0]
+    }
+
     switch (field.style) {
         case 1:
             return <Select1
                 label={field.title}
                 placeholder={field.placeholder}
-                options={ Object.values(field.options)}
+                options={Object.values(field.options)}
                 // options={field.options}
                 selectedValue={value}
+                // onSelect={(val) => onChange(sendkey(field.options, val))}
                 onSelect={onChange}
                 itemKey={field.title}
                 // itemKey={field.sectionId}

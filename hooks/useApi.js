@@ -181,6 +181,14 @@ export const api = {
     return sendRequest('m_forms', { finger });
   },
 
+  Sendform: async (finger, data) => {
+    console.log('Sending form data:', { finger, data });
+    // if (DEV_MODE) {
+    //   return mockDelay(MOCK_DATA.rentalProject);
+    // }
+    // return sendRequest('m_sendform', { finger, data });
+  },
+
   // ارسال کار (درخواست اجاره)
   addWork: async (requestData) => {
     if (DEV_MODE) {

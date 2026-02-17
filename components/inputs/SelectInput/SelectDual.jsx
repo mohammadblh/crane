@@ -14,6 +14,7 @@ const SelectDual = ({
   maxVisibleItems = 3,
   disabled = false,
 }) => {
+  // const [selected, setSelected] = useState({});
   const [category, setCategory] = useState(selectedValue?.category || null);
   const [subCategory, setSubCategory] = useState(selectedValue?.subCategory || null);
 
@@ -30,19 +31,25 @@ const SelectDual = ({
     setCategory(val);
     setSubCategory(null);
 
-    onSelect?.({
-      category: val,
-      subCategory: null,
-    });
+    // setSelected?.({
+    //   category: val,
+    //   subCategory: null,
+    // });
+    // onSelect?.({
+    //   category: val,
+    //   subCategory: null,
+    // });
   };
 
   const handleSubCategoryChange = (val) => {
     setSubCategory(val);
 
-    onSelect?.({
-      category,
-      subCategory: val,
-    });
+    // setSelected?.({
+    //   category,
+    //   subCategory: val,
+    // });
+
+    onSelect?.(Object.entries(options2?.[category] || {}).find(([key, value]) => value === val)?.[0]);
   };
 
   return (

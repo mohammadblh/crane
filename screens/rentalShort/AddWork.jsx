@@ -8,7 +8,7 @@ import Input2 from '@/components/inputs/TextInput/Input2';
 import { colorMap } from '@/config/config';
 import DatePickerComponent2 from '@/components/inputs/Date/DatePicker2';
 
-export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit }) {
+export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit, onFormChange }) {
     const [formData, setFormData] = useState({});
 
     console.log(', items', items,)
@@ -42,7 +42,7 @@ export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit 
                         data={items}
                         onChange={(data) => {
                             console.log("FORM:", data);
-                            setFormData(data);
+                            onFormChange(data);
                         }}
                     />
 

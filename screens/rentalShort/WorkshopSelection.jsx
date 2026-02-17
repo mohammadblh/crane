@@ -10,7 +10,7 @@ import { ChevronDown } from 'lucide-react-native';
 import tw from 'tailwind-react-native-classnames';
 import RenderForm from '@/components/FormRenderer/RenderForm';
 
-export default function WorkshopSelection({ jsonComp }) {
+export default function WorkshopSelection({ jsonComp, onFormChange }) {
     const [selectedWorkshopType, setSelectedWorkshopType] = useState('existing');
 
     
@@ -103,7 +103,8 @@ export default function WorkshopSelection({ jsonComp }) {
 
             <RenderForm
                 data={selectedWorkshopType === 'new' ? jsonComp.sections2 : jsonComp.sections}
-                onChange={(formData) => console.log("FORM:", formData)}
+                onChange={onFormChange} 
+                // onChange={(formData) => console.log("FORM:", formData)} 
             />
         </View>
     );

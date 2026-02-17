@@ -87,7 +87,8 @@ export default function RenderForm({ data, onChange }) {
           // <DatePickerComponent
             field={field}
             value={field.defaultValue}
-            onChange={onChange}
+            onChange={(value) => handleFieldChange(field.sectionId, value)}
+            // onChange={onChange}
           />
         );
 

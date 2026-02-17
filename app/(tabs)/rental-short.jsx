@@ -34,13 +34,9 @@ export default function RentalShortScreen() {
     const [pendingWorkType, setPendingWorkType] = useState(null);
     const [previousStep, setPreviousStep] = useState(1);
 
-    const [formData, setFormData] = useState({
-        workshopName: '', cat1: '', cat2: '',
-        works: []
-    });
+    const [formData, setFormData] = useState({});
     const [additionalServices, setAdditionalServices] = useState({});
 
-    console.log('workItems', workItems)
     console.log('rentalShort', rentalShort)
 
     const navigation = useNavigation();
@@ -114,8 +110,11 @@ export default function RentalShortScreen() {
         }
     }, [currentStep]);
 
+    console.log('formData', formData)
     // Check workItems to enable/disable next button
     useEffect(() => {
+    console.log('workItems', workItems)
+
         if (currentStep === 2) {
             // At step 2 (work type selection), need at least one work item
             setNextDisabled(workItems.length === 0);
@@ -299,6 +298,34 @@ export default function RentalShortScreen() {
         }
     };
 
+    const onFormChange = (data) => {
+        if(!formData.formId) {
+            data.formId = rentalShort.formId;
+            data.name = rentalShort.name;
+        }
+
+        Object.entries(data).forEach(([key, value]) => {
+            if(key.includes(`f_${rentalShort.formId}`)) {
+                // const originalKey = key.replace(`f_${rentalShort.formId}_`, '');
+                // data[originalKey] = value;
+                // delete data[key];
+                return;
+            }
+            // if (data[key] === undefined) {
+            //     delete data[key];
+            // }
+            console.log('key', key, 'value', value)
+            data[`f_${rentalShort.formId}_${key}`] = value;
+
+            delete data[key];
+        });
+
+        setFormData(prev => ({
+            ...prev,
+            ...data
+        }));
+    }
+
     if (showAddWork) {
         const items = rentalShort.steps[1].sections.slice(1);
         // const items = rentalShort.steps[1].sections;
@@ -309,6 +336,7 @@ export default function RentalShortScreen() {
                     onBack={() => setShowAddWork(false)}
                     onSubmit={handleAddNewItem}
                     items={items}
+                    onFormChange={onFormChange}
                     // items={items[showAddWork]}
                     addWorkName={showAddWork}
                 // workType={pendingWorkType}
@@ -320,7 +348,7 @@ export default function RentalShortScreen() {
         console.log('renderSteps', currentStep, rentalShort.steps[currentStep - 1])
         switch (currentStep) {
             case 1:
-                return <WorkshopSelection jsonComp={rentalShort.steps[0]} />
+                return <WorkshopSelection jsonComp={rentalShort.steps[0]} onFormChange={onFormChange} />
 
             case 2:
                 return <WorkTypeSelection
@@ -330,15 +358,18 @@ export default function RentalShortScreen() {
                     onRemoveItem={handleRemoveItem}
                 />
 
-            case 3:
-                return <AdditionalServicesSelection
-                    jsonComp={rentalShort.steps[2]}
-                    onChange={(data) => setAdditionalServices(data)}
-                />
+            // case 3:
+            //     return 
+                // return <AdditionalServicesSelection
+                //     jsonComp={rentalShort.steps[2]}
+                //     // onChange={(data) => setAdditionalServices(data)}
+                //     onFormChange={onFormChange}
+                // />
 
             default:
-                return <RenderForm data={rentalShort.steps[currentStep - 1].sections}
-                // onChange={handleFormChange} 
+                return <RenderForm 
+                    data={rentalShort.steps[currentStep - 1].sections}
+                    onChange={onFormChange} 
                 />
         }
     }

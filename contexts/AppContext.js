@@ -71,9 +71,10 @@ export const AppProvider = ({ children }) => {
     if(!forms.success)
       return;
 
-    const rentalShort = forms.forms.find((f) => f.name = 'rentalshort');
-    const rentalProject = forms.forms.find((f) => f.name = 'rentalProject');
-    const rentalLong = forms.forms.find((f) => f.name = 'rentalLong');
+    console.log('forms.forms', forms.forms)
+    const rentalShort = forms.forms.find((f) => f.name === 'rentalShort');
+    const rentalProject = forms.forms.find((f) => f.name === 'rentalProject');
+    const rentalLong = forms.forms.find((f) => f.name === 'rentalLong');
 
     if (rentalLong)
       await AsyncStorage.setItem('rentalLong', JSON.stringify(rentalLong));
