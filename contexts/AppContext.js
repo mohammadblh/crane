@@ -48,7 +48,10 @@ export const AppProvider = ({ children }) => {
 
   const setConfig = async (config) => {
     console.log(';setConfig;', forms)
-    if(!config || (config.version === appConfig.version && forms.rentalLong && forms.rentalProject && forms.rentalShort)) return;
+    if(!config || (config.version === appConfig.version && forms.rentalLong && forms.rentalProject && forms.rentalShort)) {
+      getForms();
+      return;
+    };
 
     try {
       setAppConfig({...appConfig, ...config})
@@ -68,7 +71,7 @@ export const AppProvider = ({ children }) => {
 
     // if(!forms.success && forms.message === 'خطای کاربری')
     //   return <Redirect to="/login" />
-    if(!forms.success)
+    if(forms && !forms.success)
       return;
 
     console.log('forms.forms', forms.forms)
@@ -76,6 +79,9 @@ export const AppProvider = ({ children }) => {
     const rentalProject = forms.forms.find((f) => f.name === 'rentalProject');
     const rentalLong = forms.forms.find((f) => f.name === 'rentalLong');
 
+    console.log('rentalLong', rentalLong)
+    console.log('rentalShort', rentalShort);
+    console.log('rentalLong',rentalLong)
     if (rentalLong)
       await AsyncStorage.setItem('rentalLong', JSON.stringify(rentalLong));
     if (rentalShort)

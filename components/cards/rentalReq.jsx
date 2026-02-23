@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native'; // اضافه کردن ScrollView
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'tailwind-react-native-classnames';
 
 const statusTheme = {
@@ -30,51 +31,54 @@ const statusTheme = {
 };
 
 export default function RentalReq({ item, onPress }) {
-    const theme = statusTheme[item.status];
+    const theme = statusTheme[item.status] || statusTheme.pending;
 
     return (
-        <TouchableOpacity
-            style={tw`${theme.bg} border ${theme.border} rounded-xl p-3 mb-4`}
-            onPress={() => onPress && onPress(item.id)}
-            activeOpacity={0.7}
-        >
-            <View style={tw`flex-row justify-between mb-2`}>
-                <Text style={tw`text-gray-600 text-xs`}>{item.date}</Text>
-                <Text style={tw`text-gray-800 font-bold text-sm`}>{item.type}</Text>
-            </View>
+        <SafeAreaView edges={[]}>
+            <TouchableOpacity
+                style={tw`${theme.bg} border-2 ${theme.border} rounded-xl p-3 mb-4`}
+                onPress={() => onPress && onPress(item.id)}
+                activeOpacity={0.7}
+            >
+                <View style={tw`flex-row justify-between mb-2`}>
+                    <Text style={tw`text-gray-600 text-xs`}>{item.date}</Text>
+                    <Text style={tw`text-gray-800 font-bold text-sm`}>{item.type}</Text>
+                </View>
 
-            <Text style={tw`text-gray-700 text-xs text-right mb-3`}>
-                {item.description}
-            </Text>
+                <Text style={tw`text-gray-700 text-xs text-right mb-3`}>
+                    {item.description}
+                </Text>
 
-            <View style={tw`flex-row items-center justify-between`}>
-                <TouchableOpacity
-                    style={tw`${theme.btnBg} border ${theme.btnBorder} px-4 py-1.5 rounded-full`}
-                >
-                    <Text style={tw`${theme.btnText} text-xs font-bold`}>
-                        {theme.label}
-                    </Text>
-                </TouchableOpacity>
+                <View style={tw`flex-row items-center justify-between`}>
+                    <TouchableOpacity
+                        style={tw`${theme.btnBg} border-2 ${theme.btnBorder} px-4 py-1.5 rounded-full`}
+                    >
+                        <Text style={tw`${theme.btnText} text-xs font-bold`}>
+                            {theme.label}
+                        </Text>
+                    </TouchableOpacity>
 
-                {/* جایگزین کردن View با ScrollView */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={tw`max-w-1/2 flex-row-reverse`}
-                    contentContainerStyle={tw`flex-row items-center`}
-                >
-                    {item.tags?.map((tag, i) => (
-                        <View
-                            key={i}
-                            style={tw`bg-gray-100 px-3 py-1 rounded-full border border-gray-300 ml-1.5`}
+                    {item.tags && item.tags.length > 0 && (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={tw`max-w-1/2`}
+                            contentContainerStyle={tw`flex-row-reverse items-center`}
                         >
-                            <Text style={tw`text-gray-700 text-xs`}>
-                                {tag}
-                            </Text>
-                        </View>
-                    ))}
-                </ScrollView>
-            </View>
-        </TouchableOpacity>
+                            {item.tags.map((tag, i) => (
+                                <View
+                                    key={i}
+                                    style={tw`bg-white px-3 py-1 rounded-full border border-gray-300 ml-1.5`}
+                                >
+                                    <Text style={tw`text-gray-700 text-xs`}>
+                                        {tag}
+                                    </Text>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
+            </TouchableOpacity>
+        </SafeAreaView>
     );
 }

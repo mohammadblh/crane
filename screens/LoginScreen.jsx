@@ -81,7 +81,7 @@ const CraneLoginScreen = () => {
 
       console.log("Login response:", response);
 
-      if (!response.success) throw new Error(response.message);
+      if (!response || !response.success) throw new Error(response.message);
       // Store finger, username and mobile for OTP screen
       // await AsyncStorage.setItem('temp_username', username);
       await AsyncStorage.setItem('user_finger', response.finger);

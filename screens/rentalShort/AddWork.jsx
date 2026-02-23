@@ -8,7 +8,7 @@ import Input2 from '@/components/inputs/TextInput/Input2';
 import { colorMap } from '@/config/config';
 import DatePickerComponent2 from '@/components/inputs/Date/DatePicker2';
 
-export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit, onFormChange }) {
+export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit, onFormChange, indexKeys }) {
     const [formData, setFormData] = useState({});
 
     console.log(', items', items,)
@@ -20,7 +20,7 @@ export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit,
             onSubmit(formData);
         }
     };
-
+    console.log('indexKeys', indexKeys)
     return (
         <SafeAreaView style={tw`flex-1 bg-white`} edges={['top', 'left', 'right']}>
             <StatusBar barStyle="dark-content" />
@@ -39,6 +39,7 @@ export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit,
                     <Text style={tw`text-gray-800 font-bold text-lg mb-6 text-right`}>شرایط کار:</Text>
 
                     <RenderForm
+                        index={indexKeys}
                         data={items}
                         onChange={(data) => {
                             console.log("FORM:", data);

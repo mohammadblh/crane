@@ -2,6 +2,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 import Checkbox1 from '../inputs/CheckboxGroup/Checkbox1';
+import CheckboxMulti from '../inputs/CheckboxGroup/CheckboxMulti';
 import Checkbox2 from '../inputs/CheckboxGroup/Checkbox2';
 import ToggleSwitch from '../inputs/CheckboxGroup/ToggleSwitch';
 // import Style2Input from './styles/Style2Input';
@@ -10,10 +11,13 @@ import ToggleSwitch from '../inputs/CheckboxGroup/ToggleSwitch';
 export default function CheckboxRender({ field, value, onChange }) {
     switch (field.style) {
         case 1:
-            return <Checkbox1
+            return <CheckboxMulti
                 label={field.title}
-                checked={value || false}
-                onPress={() => onChange(!value)}
+                // checked={value || false}
+                // onPress={() => onChange(!value)}
+                value={value}
+                onChange={onChange}
+                options={field.options}
                 color={field.color}
             />;
 
@@ -41,6 +45,14 @@ export default function CheckboxRender({ field, value, onChange }) {
                     placeholder={field.placeholder || "وارد کنید..."}
                 />
             );
+
+        case 3:
+            return <Checkbox1
+                label={field.title}
+                checked={value || false}
+                onPress={() => onChange(!value)}
+                color={field.color}
+            />;
 
         case 4:
             return <ToggleSwitch

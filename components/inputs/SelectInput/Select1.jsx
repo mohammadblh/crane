@@ -26,7 +26,14 @@ const Select1 = ({
     const isWeb = Platform.OS === 'web';
 
     const [internalValue, setInternalValue] = useState(null);
-    const finalValue = selectedValue !== undefined ? selectedValue : internalValue;
+
+    // تشخیص controlled / uncontrolled
+    const isControlled = selectedValue !== undefined;
+
+    console.log('selectedValue', selectedValue)
+    // مقدار نهایی که تو UI نمایش داده میشه
+    const finalValue = selectedValue;
+    // const finalValue = isControlled ? selectedValue : internalValue;
 
     const [isOpen, setIsOpen] = useState(false);
     const slideAnim = useRef(new Animated.Value(0)).current;
@@ -41,6 +48,13 @@ const Select1 = ({
             }
         };
     }, []);
+
+    // اگر مقدار از بیرون عوض شد، استیت داخلی هم sync بشه
+    useEffect(() => {
+        if (isControlled) {
+            setInternalValue(selectedValue);
+        }
+    }, [selectedValue]);
 
     const toggleDropdown = () => {
         if (disabled) return;
@@ -78,8 +92,11 @@ const Select1 = ({
     };
 
     const handleSelect = (option) => {
-        if (onSelect) onSelect(option);
-        if (!onSelect) setInternalValue(option);
+        if (!isControlled) {
+            setInternalValue(option);
+        }
+
+        onSelect?.(option);
         toggleDropdown();
     };
 
@@ -95,7 +112,7 @@ const Select1 = ({
     });
 
     return (
-        <View style={tw`mb-1 relative`}>
+        <View style={tw`mb-1 relative`} key={itemKey}>
 
             {/* کلیک خارج — بالاتر رندر شد تا روی آیتم‌ها نیفته */}
             {isOpen && (
@@ -142,7 +159,8 @@ const Select1 = ({
                 <Text
                     style={tw`absolute right-4 ${isWeb ? '-top-1/4' : '-top-2/4'} text-gray-500 text-xs bg-white px-1`}
                 >
-                    {itemKey}
+                    {label}
+                    {/* {itemKey} */}
                 </Text>
             </TouchableOpacity>
 
@@ -159,9 +177,9 @@ const Select1 = ({
                     }}
                 >
                     <ScrollView showsVerticalScrollIndicator={!isWeb}>
-                    <View
-                        style={tw`bg-white border border-gray-300 rounded-b-xl overflow-hidden`}
-                    >
+                        <View
+                            style={tw`bg-white border border-gray-300 rounded-b-xl overflow-hidden`}
+                        >
                             {options.map((option, index) => (
                                 <TouchableOpacity
                                     key={index}
@@ -185,8 +203,8 @@ const Select1 = ({
                                     </Text>
                                 </TouchableOpacity>
                             ))}
-                    </View>
-                        </ScrollView>
+                        </View>
+                    </ScrollView>
                 </Animated.View>
             )}
 

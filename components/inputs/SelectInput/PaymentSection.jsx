@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, I18nManager } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 import { Minus } from 'lucide-react-native';
 import Select1 from './Select1';
@@ -12,12 +12,20 @@ export default function PaymentSection({
     onChange,
     onRemove
 }) {
-    // Ensure value is always an object
-    const safeValue = value && typeof value === 'object' ? value : {};
+    // فعال‌سازی RTL (اگه کل اپ RTL نیست، این خطو بردار)
+    // I18nManager.forceRTL(true);
+
+    const isControlled = value !== undefined;
+
+    const [internalValue, setInternalValue] = useState({});
+
+    const safeValue = isControlled && value && typeof value === 'object'
+        ? value
+        : internalValue;
 
     // Initialize default value structure if empty
     useEffect(() => {
-        if (!value || Object.keys(value).length === 0) {
+        if (!safeValue || Object.keys(safeValue).length === 0) {
             const initialValue = {};
             if (field?.fields) {
                 field.fields.forEach(f => {
@@ -28,17 +36,26 @@ export default function PaymentSection({
                     }
                 });
             }
-            if (onChange) onChange(initialValue);
+
+            if (!isControlled) {
+                setInternalValue(initialValue);
+            }
+
+            onChange?.(initialValue);
         }
-    }, []);
+    }, [field]);
 
     const handleFieldChange = (fieldId, newValue) => {
-        if (onChange) {
-            onChange({
-                ...safeValue,
-                [fieldId]: newValue
-            });
+        const updated = {
+            ...safeValue,
+            [fieldId]: newValue
+        };
+
+        if (!isControlled) {
+            setInternalValue(updated);
         }
+
+        onChange?.(updated);
     };
 
     // Extract fields from field config
@@ -47,26 +64,29 @@ export default function PaymentSection({
     const onReceiptField = field?.fields?.find(f => f.fieldId === 'on_receipt');
 
     return (
-        <View style={tw`bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100`}>
+        <View style={tw`bg-white rounded-2xl p-4 mb-4 border border-gray-100 shadow-sm`}>
             {/* Header */}
-            <View style={tw`flex-row items-center justify-between mb-4`}>
+            <View style={tw`flex-row-reverse items-center justify-between mb-4`}>
+                <Text style={tw`text-gray-900 font-bold text-base`}>
+                    {title}
+                </Text>
+
                 {onRemove && (
                     <TouchableOpacity
                         style={tw`w-8 h-8 bg-red-500 rounded-full items-center justify-center`}
                         onPress={onRemove}
                         activeOpacity={0.8}
                     >
-                        <Minus size={20} color="white" strokeWidth={2.5} />
+                        <Minus size={18} color="white" strokeWidth={2.5} />
                     </TouchableOpacity>
                 )}
-                <Text style={tw`text-gray-800 font-bold text-base`}>{title}</Text>
             </View>
 
             {/* Two Selects Row */}
-            <View style={[tw`flex-row mb-4 gap-3`, {gap: 20}]}>
+            <View style={tw`flex-row-reverse mb-4 gap-3`}>
                 {/* Grace Period Select */}
                 {gracePeriodField && (
-                    <View style={tw`flex-1 ml-2`}>
+                    <View style={tw`flex-1`}>
                         <Select1
                             label={gracePeriodField.title}
                             placeholder={gracePeriodField.placeholder}
@@ -81,7 +101,7 @@ export default function PaymentSection({
 
                 {/* Percent Select */}
                 {percentField && (
-                    <View style={tw`flex-1 mr-2`}>
+                    <View style={tw`flex-1`}>
                         <Select1
                             label={percentField.title}
                             placeholder={percentField.placeholder}
@@ -97,27 +117,29 @@ export default function PaymentSection({
 
             {/* Checkbox with Input */}
             {onReceiptField && (
-                <Checkbox2
-                    label={onReceiptField.title}
-                    checked={safeValue[onReceiptField.fieldId]?.checked || false}
-                    onPress={(newChecked) => {
-                        const currentValue = safeValue[onReceiptField.fieldId] || {};
-                        handleFieldChange(onReceiptField.fieldId, {
-                            checked: newChecked,
-                            inputValue: newChecked ? currentValue.inputValue : ""
-                        });
-                    }}
-                    value={safeValue[onReceiptField.fieldId]?.inputValue || ""}
-                    onChange={(newInputValue) => {
-                        const currentValue = safeValue[onReceiptField.fieldId] || {};
-                        handleFieldChange(onReceiptField.fieldId, {
-                            checked: currentValue.checked,
-                            inputValue: newInputValue
-                        });
-                    }}
-                    placeholder={onReceiptField.placeholder}
-                    color={onReceiptField.color || "yellow"}
-                />
+                <View style={tw`mt-2`}>
+                    <Checkbox2
+                        label={onReceiptField.title}
+                        checked={safeValue[onReceiptField.fieldId]?.checked || false}
+                        onPress={(newChecked) => {
+                            const currentValue = safeValue[onReceiptField.fieldId] || {};
+                            handleFieldChange(onReceiptField.fieldId, {
+                                checked: newChecked,
+                                inputValue: newChecked ? currentValue.inputValue : ""
+                            });
+                        }}
+                        value={safeValue[onReceiptField.fieldId]?.inputValue || ""}
+                        onChange={(newInputValue) => {
+                            const currentValue = safeValue[onReceiptField.fieldId] || {};
+                            handleFieldChange(onReceiptField.fieldId, {
+                                checked: currentValue.checked,
+                                inputValue: newInputValue
+                            });
+                        }}
+                        placeholder={onReceiptField.placeholder}
+                        color={onReceiptField.color || "yellow"}
+                    />
+                </View>
             )}
         </View>
     );

@@ -7,6 +7,8 @@ import PaymentSection from '../inputs/SelectInput/PaymentSection';
 import MultiSelectTags from '../inputs/SelectInput/MultiSelectTags';
 import StarRating from '../inputs/SelectInput/StarRating';
 import ButtonSelect from '../inputs/SelectInput/ButtonSelect';
+import SelectWithAdd from '../inputs/SelectInput/SelectWithAdd';
+import MultiSelectWithAdd from '../inputs/SelectInput/MultiSelectWithAdd';
 
 
 export default function SelectRender({ field, value, onChange }) {
@@ -21,24 +23,62 @@ export default function SelectRender({ field, value, onChange }) {
                 placeholder={field.placeholder}
                 options={Object.values(field.options)}
                 // options={field.options}
-                selectedValue={value}
-                // onSelect={(val) => onChange(sendkey(field.options, val))}
-                onSelect={onChange}
-                itemKey={field.title}
-                // itemKey={field.sectionId}
+                // selectedValue={value}
+                selectedValue={field.options[value]}
+                onSelect={(val) => onChange(sendkey(field.options, val))}
+                // onSelect={onChange}
+                // itemKey={field.title}
+                itemKey={field.sectionId}
                 maxVisibleItems={3}
             />;
 
-        case 2: return <MultiSelectTags
-            label={field.title}
-            placeholder={field.placeholder}
-            options={field.options}
-            selectedValues={value || field.defaultValue}
-            onSelect={onChange}
-            itemKey={field.sectionId}
-            maxVisibleItems={field.maxVisibleItems || 3}
-            disabled={field.disabled}
-        />
+        case 2:
+            return <MultiSelectTags
+                label={field.title}
+                placeholder={field.placeholder}
+                options={Object.values(field.options)}
+                selectedValues={value || field.defaultValue}
+                onSelect={onChange}
+                itemKey={field.sectionId}
+                maxVisibleItems={field.maxVisibleItems || 3}
+                disabled={field.disabled}
+            />
+
+        case 3:
+            console.log('field.sections', field)
+            return <SelectWithAdd
+                label={field.title}
+                placeholder={field.placeholder}
+                options={Object.values(field.options)}
+                sections={field.section}
+                selectedValue={field.options[value]}
+                // selectedValue={value}
+                formId={field.option} // id form
+                onSelect={(val) => onChange(sendkey(field.options, val))}
+                // onSelect={onChange}
+                itemKey={field.sectionId}
+                maxVisibleItems={field.maxVisibleItems || 3}
+                disabled={field.disabled}
+            />
+
+        case 328:
+            // console.log('field.sections', field)
+            // console.log('value', value)
+            return <MultiSelectWithAdd
+                label={field.title}
+                placeholder={field.placeholder}
+                options={Object.values(field.options)}
+                sections={field.sections}
+                selectedValues={value || []}
+                // selectedValues={value ? value.split(',') : []}
+                // selectedValues={value ? value.split(',') : []}
+                formId={field.option} // id form
+                onSelect={(val) => onChange(sendkey(field.options, val))}
+                // onSelect={(values) => onChange(sendkey(field.options, values.join(',')))}
+                itemKey={field.title}
+                maxVisibleItems={field.maxVisibleItems || 3}
+                disabled={field.disabled}
+            />
 
         case 4:
             return <StarRating
@@ -64,8 +104,9 @@ export default function SelectRender({ field, value, onChange }) {
             />;
 
         case 10:
+            if (!field.options || !field.options2) return
             return (
-               <SelectDual
+                <SelectDual
                     label={field.title}
                     placeholder={field.placeholder}
                     options={Object.values(field.options)}

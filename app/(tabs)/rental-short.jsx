@@ -113,7 +113,7 @@ export default function RentalShortScreen() {
     console.log('formData', formData)
     // Check workItems to enable/disable next button
     useEffect(() => {
-    console.log('workItems', workItems)
+        console.log('workItems', workItems)
 
         if (currentStep === 2) {
             // At step 2 (work type selection), need at least one work item
@@ -135,28 +135,13 @@ export default function RentalShortScreen() {
 
     const submitRequest = async () => {
         try {
-            // Create unified request payload
-            const requestPayload = {
-                workshop: {
-                    name: formData.workshopName,
-                    category1: formData.cat1,
-                    category2: formData.cat2
-                },
-                works: workItems.map(item => ({
-                    id: item.id,
-                    type: item.type,
-                    title: item.title,
-                    data: item.formData
-                })),
-                additionalServices: additionalServices,
-                timestamp: new Date().toISOString(),
-                type: 'اجاره موردی'
-            };
-
-            console.log('📦 Submitting request:', requestPayload);
+            const finger = await AsyncStorage.getItem('user_finger');
 
             // Send to API (uses AsyncStorage in DEV_MODE)
-            const response = await api.addWork(requestPayload);
+            const response = await api.Sendform(finger, formData);
+            console.log('response', response);
+
+            // const response = await api.addWork(requestPayload);
 
             if (response.success) {
                 // Clear workItems from AsyncStorage
@@ -164,12 +149,7 @@ export default function RentalShortScreen() {
 
                 // Reset all states
                 setWorkItems([]);
-                setFormData({
-                    workshopName: '',
-                    cat1: '',
-                    cat2: '',
-                    works: []
-                });
+                setFormData({});
                 setAdditionalServices({});
 
                 console.log('✅ States cleared for new request');
@@ -243,10 +223,10 @@ export default function RentalShortScreen() {
 
         const updatedWorkItems = [...workItems, newItem];
         setWorkItems(updatedWorkItems);
-        setFormData(prev => ({
-            ...prev,
-            works: updatedWorkItems
-        }));
+        // setFormData(prev => ({
+        //     ...prev,
+        //     // works: updatedWorkItems
+        // }));
 
         // Save to AsyncStorage
         await AsyncStorage.setItem('workItems', JSON.stringify(updatedWorkItems));
@@ -299,26 +279,29 @@ export default function RentalShortScreen() {
     };
 
     const onFormChange = (data) => {
-        if(!formData.formId) {
+        console.log('data', data);
+
+        if (!formData.formId) {
             data.formId = rentalShort.formId;
-            data.name = rentalShort.name;
+            // data.name = rentalShort.name;
         }
 
-        Object.entries(data).forEach(([key, value]) => {
-            if(key.includes(`f_${rentalShort.formId}`)) {
-                // const originalKey = key.replace(`f_${rentalShort.formId}_`, '');
-                // data[originalKey] = value;
-                // delete data[key];
-                return;
-            }
-            // if (data[key] === undefined) {
-            //     delete data[key];
-            // }
-            console.log('key', key, 'value', value)
-            data[`f_${rentalShort.formId}_${key}`] = value;
+        // console.log('index>>', workItems.length + 1)
+        // console.log('include it>>', rentalShort.steps[workItems.length])
+        // Object.entries(data).forEach(([key, value]) => {
+        //     if (key.includes(`f_`)) {
+        //         // const originalKey = key.replace(`f_${rentalShort.formId}_`, '');
+        //         // data[originalKey] = value;
+        //         // delete data[key];
+        //         return;
+        //     }
+        //     // if (data[key] === undefined) {
+        //     //     delete data[key];
+        //     // }
+        //     data[`f_${key}_${workItems.length + 1}`] = value;
 
-            delete data[key];
-        });
+        //     delete data[key];
+        // });
 
         setFormData(prev => ({
             ...prev,
@@ -333,6 +316,7 @@ export default function RentalShortScreen() {
         if (items && items.length)
             return (
                 <AddWorkScreen
+                    indexKeys={workItems.length + 1}
                     onBack={() => setShowAddWork(false)}
                     onSubmit={handleAddNewItem}
                     items={items}
@@ -346,12 +330,21 @@ export default function RentalShortScreen() {
 
     const renderSteps = () => {
         console.log('renderSteps', currentStep, rentalShort.steps[currentStep - 1])
+
+        // console.log('find 28', rentalShort.steps[currentStep].sections[0].sections.find((item) => Number(item.type) === 28))
         switch (currentStep) {
             case 1:
-                return <WorkshopSelection jsonComp={rentalShort.steps[0]} onFormChange={onFormChange} />
+                // rentalShort.steps[0].sections[0].sections = rentalShort.steps[0].sections2; //TODO: باید از بک درست بشه
+                return <RenderForm
+                    data={rentalShort.steps[currentStep - 1].sections}
+                    onChange={onFormChange}
+                />
+            // console.log(rentalShort.steps[0].sections[0].sections, 'sec:', rentalShort.steps[0].sections2)
+            // return <WorkshopSelection jsonComp={rentalShort.steps[0]} onFormChange={onFormChange} />
 
             case 2:
                 return <WorkTypeSelection
+                    onFormChange={onFormChange}
                     onAddWork={handleAddWorkStart}
                     workItems={workItems}
                     jsonComp={rentalShort.steps[1]}
@@ -360,16 +353,16 @@ export default function RentalShortScreen() {
 
             // case 3:
             //     return 
-                // return <AdditionalServicesSelection
-                //     jsonComp={rentalShort.steps[2]}
-                //     // onChange={(data) => setAdditionalServices(data)}
-                //     onFormChange={onFormChange}
-                // />
+            // return <AdditionalServicesSelection
+            //     jsonComp={rentalShort.steps[2]}
+            //     // onChange={(data) => setAdditionalServices(data)}
+            //     onFormChange={onFormChange}
+            // />
 
             default:
-                return <RenderForm 
+                return <RenderForm
                     data={rentalShort.steps[currentStep - 1].sections}
-                    onChange={onFormChange} 
+                    onChange={onFormChange}
                 />
         }
     }

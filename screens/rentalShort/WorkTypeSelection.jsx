@@ -1,15 +1,49 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 import { Check, ChevronDown, Trash2 } from 'lucide-react-native';
 import AddWorkScreen from '../../screens/rentalShort/AddWork';
 
-export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRemoveItem }) {
+export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRemoveItem, onFormChange }) {
     // const [workTypeItem, setWorkTypeItem] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedWorkType, setSelectedWorkType] = useState('loading'); // Default to loading
     const [expandedCard, setExpandedCard] = useState(null);
     const [showAddWork, setShowAddWork] = useState(null);
+
+    useEffect(() => {
+        console.log('workItems', workItems)
+        const index = workItems.length + 1; // 1, 2, 3, ...
+        const section = jsonComp.sections[0];
+        let sectionId = section.sectionId;
+
+        // اگر با f_ شروع میشه و به فرمت f_عدد_عدد هست، عدد اصلی رو استخراج کن
+        const match = sectionId?.match(/^f_(\d+)_\d+$/);
+        if (match) {
+            // حالت: f_1234_1 → استخراج 1234 و ساختن f_1234_2
+            sectionId = `f_${match[1]}_${index}`;
+        } else if (sectionId && !sectionId.startsWith('f_')) {
+            // حالت: 1234 → ساختن f_1234_1
+            sectionId = `f_${sectionId}_${index}`;
+        }
+        // اگر فرمت دیگه‌ای داشت، همون sectionId باقی می‌مونه
+
+        // حالا مقدار selectedKey رو پیدا کن
+        const selectedKey = Object.keys(section.options).find(
+            key => section.options[key] === selectedWorkType
+        );
+
+        // آبجکت نهایی رو بساز
+        onFormChange({
+            [sectionId]: selectedKey
+        });
+
+        // onFormChange({
+        //     [jsonComp.sections[0].sectionId]: Object.keys(jsonComp.sections[0].options).find(
+        //         key => jsonComp.sections[0].options[key] === selectedWorkType
+        //     )
+        // })
+    }, [selectedWorkType])
 
     // const handleAddNewItem = (data) => {
     //     // setPendingWorkType(type);
@@ -29,7 +63,7 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
     //     );
     // }
 
-    const workTypeItem = jsonComp.sections ? 
+    const workTypeItem = jsonComp.sections ?
         Object.values(jsonComp.sections[0].options) : [];
 
 
@@ -164,7 +198,7 @@ export default function WorkTypeSelection({ jsonComp, onAddWork, workItems, onRe
                             {/* Radio Options */}
                             <View style={tw`mb-6`}>
                                 {workTypeItem.map((item, key) => (
-                                // {jsonComp.workTypeItem.map((item, key) => (
+                                    // {jsonComp.workTypeItem.map((item, key) => (
                                     <TouchableOpacity
                                         key={key}
                                         style={tw`flex-row items-center justify-between py-3 border-b border-gray-100`}

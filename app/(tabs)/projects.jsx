@@ -1,79 +1,128 @@
 import React, { useState, useLayoutEffect, useRef, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, Animated, } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    ScrollView,
+    StatusBar,
+    Animated,
+    Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import tw from 'tailwind-react-native-classnames';
-import { ArrowRight } from 'lucide-react-native';
-import { useNavigation, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import WorkshopSelection from '../../screens/rentalShort/WorkshopSelection';
-import UploadFile from '../../screens/rentalProject/UploadFile';
-import AdditionalServicesSelection from '../../screens/rentalShort/AdditionalServicesSelection';
+import { ArrowRight } from 'lucide-react-native';
+import tw from 'tailwind-react-native-classnames';
+import { useNavigation, useRouter, useFocusEffect } from 'expo-router';
+import { useApp } from '../../contexts/AppContext';
 import Loading from '../../components/Loading';
 import StepProgress from '../../components/StepProgress';
+import WorkshopSelection from '../../screens/rentalShort/WorkshopSelection';
+import WorkTypeSelection from '../../screens/rentalShort/WorkTypeSelection';
+import AdditionalServicesSelection from '../../screens/rentalShort/AdditionalServicesSelection';
+import AddWorkScreen from '../../screens/rentalShort/AddWork';
 import { api } from '../../hooks/useApi';
+import RenderForm from '@/components/FormRenderer/RenderForm';
 
-const getHeaderTitle = (currentStep) => {
-    switch (currentStep) {
-        case 1: return 'پروژه';
-        case 2: return 'نوع کار';
-        case 3: return 'خدمات اضافی';
-        default: return 'اجاره موردی';
-    }
-};
+export default function RentalProjectScreen() {
+    const { rentalProject } = useApp();
 
-export default function ProjectsScreen() {
     const [currentStep, setCurrentStep] = useState(1);
     const [showAddWork, setShowAddWork] = useState(null);
     const [nextDisabled, setNextDisabled] = useState(false);
-    const [rentalProject, setRentalProject] = useState(null);
+    // const [rentalProject, setrentalProject] = useState(null);
     const [workItems, setWorkItems] = useState([]);
     const [pendingWorkType, setPendingWorkType] = useState(null);
     const [previousStep, setPreviousStep] = useState(1);
 
+    const [formData, setFormData] = useState({});
     const [additionalServices, setAdditionalServices] = useState({});
-    console.log('additionalServices',additionalServices)
-    
+
+    console.log('rentalProject', rentalProject)
 
     const navigation = useNavigation();
     const router = useRouter();
+    const rentalProjectRef = useRef(null);
     const scrollViewRef = useRef(null);
     const slideAnimation = useRef(new Animated.Value(0)).current;
 
-    console.log('rentalProject',rentalProject)
-    // scrool to up
+    // Reset state when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            setCurrentStep(1);
+            setShowAddWork(null);
+            // Optional: Reset workItems if you want a fresh start every time
+            // setWorkItems([]); 
+        }, [])
+    );
+
+    // get fields and load workItems from AsyncStorage
+    // useEffect(() => {
+    //     const loadData = async () => {
+    //         // Load rental short data
+    //         let res = await AsyncStorage.getItem('rentalProject');
+    //         res = JSON.parse(res);
+
+    //         if(!res) {
+    //             const finger = await AsyncStorage.getItem('user_finger');
+    //             res = await api.rentalProject(finger);
+    //         }
+
+    //         setrentalProject(res.data);
+
+    //         // Load workItems from AsyncStorage
+    //         const savedWorkItems = await AsyncStorage.getItem('workItems');
+    //         if (savedWorkItems) {
+    //             const parsedWorkItems = JSON.parse(savedWorkItems);
+    //             setWorkItems(parsedWorkItems);
+    //             setFormData(prev => ({
+    //                 ...prev,
+    //                 works: parsedWorkItems
+    //             }));
+    //         }
+    //     };
+    //     loadData();
+    // }, []);
+
+    // Animate step transitions
+    useEffect(() => {
+        if (currentStep !== previousStep) {
+            // Determine direction: if moving forward (next), slide from left to right
+            // if moving backward (prev), slide from right to left
+            const isMovingForward = currentStep > previousStep;
+            const startValue = isMovingForward ? -300 : 300; // LTR for next, RTL for prev
+
+            slideAnimation.setValue(startValue);
+
+            Animated.timing(slideAnimation, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+
+            setPreviousStep(currentStep);
+        }
+    }, [currentStep, previousStep]);
+
+    // Scroll to top when step changes
     useEffect(() => {
         if (scrollViewRef.current) {
             scrollViewRef.current.scrollTo({ y: 0, animated: true });
         }
     }, [currentStep]);
 
-    // get fields and load workItems from AsyncStorage
-    useEffect(() => {
-        const loadData = async () => {
-            // Load rental short data
-            let res = await AsyncStorage.getItem('rentalProject');
-            res = JSON.parse(res);
+    console.log('formData', formData)
+    // Check workItems to enable/disable next button
+    // useEffect(() => {
+    //     console.log('workItems', workItems)
 
-            if(!res) {
-                const finger = await AsyncStorage.getItem('user_finger');
-                res = await api.rentalProject(finger);
-            }
-
-            setRentalProject(res.data);
-
-            // Load workItems from AsyncStorage
-            // const savedWorkItems = await AsyncStorage.getItem('workItems');
-            // if (savedWorkItems) {
-            //     const parsedWorkItems = JSON.parse(savedWorkItems);
-            //     setWorkItems(parsedWorkItems);
-            //     setFormData(prev => ({
-            //         ...prev,
-            //         works: parsedWorkItems
-            //     }));
-            // }
-        };
-        loadData();
-    }, []);
+    //     if (currentStep === 2) {
+    //         // At step 2 (work type selection), need at least one work item
+    //         setNextDisabled(workItems.length === 0);
+    //     } else {
+    //         // Other steps can proceed
+    //         setNextDisabled(false);
+    //     }
+    // }, [workItems, currentStep]);
 
     // Hide tab bar when in this screen
     useLayoutEffect(() => {
@@ -83,8 +132,51 @@ export default function ProjectsScreen() {
 
         return () => { };
     }, [navigation]);
-    
-    
+
+    const submitRequest = async () => {
+        try {
+            const finger = await AsyncStorage.getItem('user_finger');
+
+            // Send to API (uses AsyncStorage in DEV_MODE)
+            const response = await api.Sendform(finger, formData);
+            console.log('response', response);
+
+            // const response = await api.addWork(requestPayload);
+
+            if (response.success) {
+                // Clear workItems from AsyncStorage
+                await AsyncStorage.removeItem('workItems');
+
+                // Reset all states
+                setWorkItems([]);
+                setFormData({});
+                setAdditionalServices({});
+
+                console.log('✅ States cleared for new request');
+
+                Alert.alert(
+                    'موفق',
+                    response.message,
+                    [
+                        {
+                            text: 'باشه',
+                            onPress: () => {
+                                // Reset to step 1 and go home
+                                setCurrentStep(1);
+                                router.push('/(tabs)');
+                            }
+                        }
+                    ]
+                );
+            } else {
+                Alert.alert('خطا', response.message);
+            }
+        } catch (error) {
+            console.error('Error submitting request:', error);
+            Alert.alert('خطا', 'خطا در ارسال درخواست');
+        }
+    };
+
     const handleNext = () => {
         if (currentStep < rentalProject.steps.length) {
             setCurrentStep(currentStep + 1);
@@ -113,8 +205,172 @@ export default function ProjectsScreen() {
         }
     };
 
+    const handleAddWorkStart = (type) => {
+        console.log('type handle add work:', type)
+        setPendingWorkType(type);
+        setShowAddWork(type);
+    };
+
+    const handleAddNewItem = async (data) => {
+        console.log('handleAddNewItem data:', data);
+        const newItem = {
+            id: Date.now(),
+            title: getTitleForType(pendingWorkType, workItems.length + 1),
+            type: pendingWorkType,
+            formData: data,
+            ...getColorsForType(pendingWorkType)
+        };
+
+        const updatedWorkItems = [...workItems, newItem];
+        setWorkItems(updatedWorkItems);
+        // setFormData(prev => ({
+        //     ...prev,
+        //     // works: updatedWorkItems
+        // }));
+
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('workItems', JSON.stringify(updatedWorkItems));
+
+        setShowAddWork(false);
+        setPendingWorkType(null);
+    };
+
+    const handleRemoveItem = async (id) => {
+        const updatedWorkItems = workItems.filter(item => item.id !== id);
+        setWorkItems(updatedWorkItems);
+        setFormData(prev => ({
+            ...prev,
+            works: updatedWorkItems
+        }));
+
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('workItems', JSON.stringify(updatedWorkItems));
+    };
+
+    const getTitleForType = (type, index) => {
+        switch (type) {
+            case 'نصب': return `نصب شماره ${index}`;
+            case 'بارگیری': return `بارگیری شماره ${index}`;
+            case 'تخلیه': return `تخلیه شماره ${index}`;
+            default: return `${type} شماره ${index}`;
+        }
+    };
+
+    const getColorsForType = (type) => {
+        switch (type) {
+            case 'نصب':
+                return { color: 'yellow', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-300' };
+            case 'بارگیری':
+                return { color: 'blue', bgColor: 'bg-blue-50', borderColor: 'border-blue-300' };
+            case 'تخلیه':
+                return { color: 'green', bgColor: 'bg-green-50', borderColor: 'border-green-300' };
+            default:
+                return { color: 'gray', bgColor: 'bg-gray-50', borderColor: 'border-gray-300' };
+        }
+    };
+
+    const getHeaderTitle = () => {
+        switch (currentStep) {
+            case 1: return 'انتخاب کارگاه';
+            case 2: return 'نوع کار';
+            case 3: return 'خدمات اضافی';
+            default: return 'اجاره موردی';
+        }
+    };
+
+    const onFormChange = (data) => {
+        console.log('data', data);
+
+        if (!formData.formId) {
+            data.formId = rentalProject.formId;
+            // data.name = rentalProject.name;
+        }
+
+        // console.log('index>>', workItems.length + 1)
+        // console.log('include it>>', rentalProject.steps[workItems.length])
+        // Object.entries(data).forEach(([key, value]) => {
+        //     if (key.includes(`f_`)) {
+        //         // const originalKey = key.replace(`f_${rentalProject.formId}_`, '');
+        //         // data[originalKey] = value;
+        //         // delete data[key];
+        //         return;
+        //     }
+        //     // if (data[key] === undefined) {
+        //     //     delete data[key];
+        //     // }
+        //     data[`f_${key}_${workItems.length + 1}`] = value;
+
+        //     delete data[key];
+        // });
+
+        setFormData(prev => ({
+            ...prev,
+            ...data
+        }));
+    }
+
+    if (showAddWork) {
+        const items = rentalProject.steps[1].sections.slice(1);
+        // const items = rentalProject.steps[1].sections;
+        // if (items && items[showAddWork] && items[showAddWork].length)
+        if (items && items.length)
+            return (
+                <AddWorkScreen
+                    indexKeys={workItems.length + 1}
+                    onBack={() => setShowAddWork(false)}
+                    onSubmit={handleAddNewItem}
+                    items={items}
+                    onFormChange={onFormChange}
+                    // items={items[showAddWork]}
+                    addWorkName={showAddWork}
+                // workType={pendingWorkType}
+                />
+            );
+    }
+
+    const renderSteps = () => {
+        console.log('renderSteps', currentStep, rentalProject.steps[currentStep - 1])
+        return <RenderForm
+            data={rentalProject.steps[currentStep - 1].sections}
+            onChange={onFormChange}
+        />
+        // console.log('find 28', rentalProject.steps[currentStep].sections[0].sections.find((item) => Number(item.type) === 28))
+        switch (currentStep) {
+            case 1:
+                // rentalProject.steps[0].sections[0].sections = rentalProject.steps[0].sections2; //TODO: باید از بک درست بشه
+                return <RenderForm
+                    data={rentalProject.steps[currentStep - 1].sections}
+                    onChange={onFormChange}
+                />
+            // console.log(rentalProject.steps[0].sections[0].sections, 'sec:', rentalProject.steps[0].sections2)
+            // return <WorkshopSelection jsonComp={rentalProject.steps[0]} onFormChange={onFormChange} />
+
+            case 2:
+                return <WorkTypeSelection
+                    onFormChange={onFormChange}
+                    onAddWork={handleAddWorkStart}
+                    workItems={workItems}
+                    jsonComp={rentalProject.steps[1]}
+                    onRemoveItem={handleRemoveItem}
+                />
+
+            // case 3:
+            //     return 
+            // return <AdditionalServicesSelection
+            //     jsonComp={rentalProject.steps[2]}
+            //     // onChange={(data) => setAdditionalServices(data)}
+            //     onFormChange={onFormChange}
+            // />
+
+            default:
+                return <RenderForm
+                    data={rentalProject.steps[currentStep - 1].sections}
+                    onChange={onFormChange}
+                />
+        }
+    }
+
     if (!rentalProject) return <Loading />;
-    console.log('currentStep', currentStep);
 
     return (
         <SafeAreaView style={tw`flex-1 bg-white`} edges={['top', 'left', 'right']}>
@@ -130,11 +386,9 @@ export default function ProjectsScreen() {
                 <View style={tw`bg-white border-b border-gray-200 px-4 py-4 flex-row items-center justify-between`}>
                     <View style={tw`w-6`} />
                     <Text style={tw`text-lg font-bold text-gray-800`}>
-                        {getHeaderTitle(currentStep)}
+                        {getHeaderTitle()}
                     </Text>
-                    <TouchableOpacity 
-                    onPress={handleBack}
-                    >
+                    <TouchableOpacity onPress={handleBack}>
                         <ArrowRight size={24} color="#374151" />
                     </TouchableOpacity>
                 </View>
@@ -149,41 +403,36 @@ export default function ProjectsScreen() {
                             transform: [{ translateX: slideAnimation }],
                         }}
                     >
-                        {/* <RenderPage jsonComp={rentalProject.steps[currentStep-1]} /> */}
-                        {currentStep === 1 && (
+
+                        {renderSteps()}
+                        {/* {currentStep === 1 && (
                             <WorkshopSelection jsonComp={rentalProject.steps[0]} />
-                        )}
+                        )} */}
 
-                        {currentStep === 2 && (
-                            <UploadFile 
+                        {/* {currentStep === 2 && (
+                            <WorkTypeSelection
+                                onAddWork={handleAddWorkStart}
+                                workItems={workItems}
                                 jsonComp={rentalProject.steps[1]}
-                                onChange={(data) => setAdditionalServices(data)}
+                                onRemoveItem={handleRemoveItem}
                             />
-                            // <WorkTypeSelection
-                            //     onAddWork={handleAddWorkStart}
-                            //     workItems={workItems}
-                            //     jsonComp={rentalShort.steps[1]}
-                            //     onRemoveItem={handleRemoveItem}
-                            // />
-                        )}
+                        )} */}
 
-                        {currentStep === 3 && (
+                        {/* {currentStep === 3 && (
                             <AdditionalServicesSelection
                                 jsonComp={rentalProject.steps[2]}
                                 onChange={(data) => setAdditionalServices(data)}
                             />
-                        )}
+                        )} */}
                     </Animated.View>
                 </View>
             </ScrollView>
-
-
 
             {/* دکمه ثابت در پایین صفحه */}
             <View
                 style={tw`fixed flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`}
             >
-                {currentStep === 3 ? <TouchableOpacity
+                {currentStep === rentalProject.steps.length ? <TouchableOpacity
                     style={tw`flex-1 bg-yellow-500 py-3 rounded-lg shadow-lg`}
                     onPress={handleNext}
                 >
@@ -217,17 +466,3 @@ export default function ProjectsScreen() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f8f8f8',
-    },
-    text: {
-        fontSize: 20,
-        fontFamily: 'Dana',
-        color: '#333',
-    },
-});

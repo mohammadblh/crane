@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'tailwind-react-native-classnames';
 
-// 🎨 Map status → theme
 const statusTheme = {
     pending: {
         label: "در انتظار قیمت گذاری",
@@ -34,43 +34,50 @@ export default function ProjectReq({ item, onPress }) {
     const theme = statusTheme[item.status] || statusTheme.pending;
 
     return (
-        <TouchableOpacity
-            style={tw`${theme.bg} border-2 ${theme.border} rounded-xl p-3 mb-3`}
-            onPress={() => onPress && onPress(item.id)}
-            activeOpacity={0.7}
-        >
-            <View style={tw`flex-row items-center justify-between mb-2`}>
-                <Text style={tw`text-gray-600 text-xs`}>{item.date}</Text>
-                <Text style={tw`text-gray-800 font-bold text-sm`}>{item.type}</Text>
-            </View>
+        <SafeAreaView edges={[]}>
+            <TouchableOpacity
+                style={tw`${theme.bg} border-2 ${theme.border} rounded-xl p-3 mb-3`}
+                onPress={() => onPress && onPress(item.id)}
+                activeOpacity={0.7}
+            >
+                <View style={tw`flex-row items-center justify-between mb-2`}>
+                    <Text style={tw`text-gray-600 text-xs`}>{item.date}</Text>
+                    <Text style={tw`text-gray-800 font-bold text-sm`}>{item.type}</Text>
+                </View>
 
-            <Text style={tw`text-gray-700 text-xs text-right mb-3`}>
-                {item.description}
-            </Text>
+                <Text style={tw`text-gray-700 text-xs text-right mb-3`}>
+                    {item.description}
+                </Text>
 
-            <View style={tw`flex-row items-center justify-between`}>
-                <TouchableOpacity
-                    style={tw`${theme.btnBg} border-2 ${theme.btnBorder} px-4 py-1.5 rounded-full`}
-                    activeOpacity={0.8}
-                >
-                    <Text style={tw`${theme.btnText} font-bold text-xs`}>
-                        {theme.label}
-                    </Text>
-                </TouchableOpacity>
+                <View style={tw`flex-row items-center justify-between`}>
+                    <TouchableOpacity
+                        style={tw`${theme.btnBg} border-2 ${theme.btnBorder} px-4 py-1.5 rounded-full`}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={tw`${theme.btnText} font-bold text-xs`}>
+                            {theme.label}
+                        </Text>
+                    </TouchableOpacity>
 
-                {item.tags && (
-                    <View style={tw`flex-row flex-wrap`}>
-                        {item.tags.map((tag, index) => (
-                            <View
-                                key={index}
-                                style={tw`bg-white px-3 py-1 rounded-full border border-gray-300 mx-1 mb-1`}
-                            >
-                                <Text style={tw`text-gray-700 text-xs`}>{tag}</Text>
-                            </View>
-                        ))}
-                    </View>
-                )}
-            </View>
-        </TouchableOpacity>
+                    {item.tags && item.tags.length > 0 && (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={tw`max-w-1/2`}
+                            contentContainerStyle={tw`flex-row-reverse items-center`}
+                        >
+                            {item.tags.map((tag, index) => (
+                                <View
+                                    key={index}
+                                    style={tw`bg-white px-3 py-1 rounded-full border border-gray-300 ml-1.5`}
+                                >
+                                    <Text style={tw`text-gray-700 text-xs`}>{tag}</Text>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
+            </TouchableOpacity>
+        </SafeAreaView>
     );
 }

@@ -1,224 +1,299 @@
+// RequestsScreen.js
+
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StatusBar, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StatusBar, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'tailwind-react-native-classnames';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProjectReq from '../../components/cards/projectReq';
 import RentalReq from '../../components/cards/rentalReq';
+import { api } from '../../hooks/useApi';
 
-const transformLoadedRequest = (loadedRequest) => {
-    // تبدیل تاریخ به شمسی (فرضی)
-    const convertToPersianDate = (dateString) => {
-        const date = new Date(dateString);
-        const persianDate = date.toLocaleDateString('fa-IR');
-        return persianDate;
-    };
+// در transformApiResponse - اضافه کردن برای پروژه‌ای
 
-    // استخراج تعداد هر نوع کار
-    const extractWorkCounts = (works) => {
-        const counts = {};
-        works?.forEach(work => {
-            if (work.type) {
-                counts[work.type] = (counts[work.type] || 0) + 1;
+const transformApiResponse = (apiResponse) => {
+    if (!apiResponse || !apiResponse.forms) {
+        return { requests: [], fullData: {} };
+    }
+
+    const requests = [];
+    const fullData = {};
+
+    Object.entries(apiResponse.forms).forEach(([formType, formData]) => {
+        Object.entries(formData).forEach(([requestId, requestData]) => {
+            const { name, fields } = requestData;
+
+            // ذخیره داده کامل
+            fullData[requestId] = {
+                type: formType,
+                name: name,
+                fields: fields,
+                rawData: requestData
+            };
+
+            const tags = [];
+            const workTypes = {};
+            let date = 'تاریخ نامشخص';
+            let workshopName = '';
+            let status = 'pending';
+            let description = '';
+
+            if (fields) {
+                // برای پروژه‌ای
+                if (formType === 'پروژه ای' || formType === 'اجاره طولانی مدت') {
+                    const mainFields = fields['1'] || {};
+
+                    // فیلد 1211: نام کارگاه
+                    if (mainFields['1211'] && Array.isArray(mainFields['1211']) && mainFields['1211'][0]) {
+                        workshopName = mainFields['1211'][0];
+                    }
+
+                    // فیلد 1221: توضیحات
+                    if (mainFields['1221'] && Array.isArray(mainFields['1221']) && mainFields['1221'][0]) {
+                        description = mainFields['1221'][0];
+                    }
+
+                    // فیلد 1236: دسته‌بندی
+                    if (mainFields['1236'] && Array.isArray(mainFields['1236']) && mainFields['1236'][1]) {
+                        tags.push(mainFields['1236'][1]);
+                    }
+
+                    // فیلد 1223: بیمه
+                    if (mainFields['1223'] && Array.isArray(mainFields['1223']) && mainFields['1223'][1]) {
+                        tags.push(mainFields['1223'][1]);
+                    }
+
+                    // فیلد 1226: پیش پرداخت
+                    if (mainFields['1226'] && Array.isArray(mainFields['1226']) && mainFields['1226'][1]) {
+                        status = 'waiting';
+                    }
+                }
+                // برای اجاره موردی
+                else {
+                    Object.values(fields).forEach(fieldGroup => {
+                        Object.entries(fieldGroup).forEach(([fieldId, fieldValue]) => {
+                            if (fieldId === '1142' && Array.isArray(fieldValue) && fieldValue[0]) {
+                                workshopName = fieldValue[0];
+                            }
+                            if (fieldId === '1147' && Array.isArray(fieldValue) && fieldValue[1]) {
+                                const workType = fieldValue[1];
+                                workTypes[workType] = (workTypes[workType] || 0) + 1;
+                            }
+                            if (fieldId === '1154' && Array.isArray(fieldValue) && fieldValue[1]) {
+                                const materialType = fieldValue[1];
+                                if (!tags.includes(materialType)) {
+                                    tags.push(materialType);
+                                }
+                            }
+                            if (fieldId === '1155' && Array.isArray(fieldValue) && fieldValue[0]) {
+                                if (date === 'تاریخ نامشخص') {
+                                    date = fieldValue[0];
+                                }
+                            }
+                            if (fieldId === '1159' && Array.isArray(fieldValue) && fieldValue[1]) {
+                                status = 'waiting';
+                            }
+                        });
+                    });
+
+                    Object.entries(workTypes).forEach(([type, count]) => {
+                        if (count > 1) {
+                            tags.unshift(`${count} ${type}`);
+                        } else {
+                            tags.unshift(type);
+                        }
+                    });
+                }
             }
-        });
-        return counts;
-    };
 
-    // ساخت آرایه تگ‌ها
-    const buildTags = (works, additionalServices) => {
-        const tags = [];
+            // تشخیص description نهایی
+            let finalDescription = workshopName || description || name || 'بدون نام';
 
-        if (loadedRequest.type === 'اجاره موردی') {
-            const workCounts = extractWorkCounts(works);
-            Object.entries(workCounts).forEach(([type, count]) => {
-                if (count > 1) {
-                    tags.push(`${count} ${type}`);
-                } else tags.push(type);
+            if (!finalDescription || finalDescription === 'بدون نام') {
+                if (fields && fields['1']) {
+                    const locationField = fields['1']['1177'] || fields['1']['1221'];
+                    if (locationField && Array.isArray(locationField) && locationField[0]) {
+                        finalDescription = locationField[0];
+                    }
+                }
+            }
+
+            requests.push({
+                id: parseInt(requestId),
+                type: formType,
+                date: date,
+                description: finalDescription,
+                status: status,
+                tags: tags.length > 0 ? tags : undefined
             });
-        }
+        });
+    });
 
-        // تگ‌های مربوط به نوع کارها
-        // const workCounts = extractWorkCounts(works);
-        // Object.entries(workCounts).forEach(([type, count]) => {
-        //     tags.push(`${count} ${type}`);
-        // });
+    requests.sort((a, b) => {
+        if (a.date === 'تاریخ نامشخص') return 1;
+        if (b.date === 'تاریخ نامشخص') return -1;
+        return b.date.localeCompare(a.date);
+    });
 
-        // // تگ‌های مربوط به خدمات اضافی
-        // if (additionalServices) {
-        //     if (additionalServices['بیمه'] && additionalServices['بیمه'] !== 'بدون بیمه') {
-        //         tags.push('بیمه');
-        //     }
-        //     if (additionalServices['مدارک و مجوز ها']) {
-        //         tags.push('مدارک');
-        //     }
-        //     if (additionalServices['هزینه رفت و برگشت']) {
-        //         tags.push('رفت و برگشت');
-        //     }
-        // }
-
-        return tags;
-    };
-
-    // تبدیل به فرمت مورد نظر
-    const result = {
-        id: loadedRequest.id || 0,
-        type: loadedRequest.type || 'پروژه ای',
-        date: convertToPersianDate(loadedRequest.timestamp) || '۱۴۰۳/۰۸/۲۷',
-        description: loadedRequest.workshop?.name || 'آدرس',
-        status: loadedRequest.status || 'pending',
-        tags: buildTags(loadedRequest.works, loadedRequest.additionalServices)
-    };
-
-    return result;
+    return { requests, fullData };
 };
-
-
-
 export default function RequestsScreen() {
     const router = useRouter();
     const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Load requests from AsyncStorage
-    const loadRequests = async () => {
+    // Load requests from API
+    const loadRequestsFromApi = async () => {
         try {
-            const storedRequests = await AsyncStorage.getItem('requests');
-            if (storedRequests) {
-                const parsedRequests = JSON.parse(storedRequests);
-                console.log('📥 Loaded requests:', parsedRequests);
-                const transformedRequests = parsedRequests.map(transformLoadedRequest);
-                console.log('📥 Transformed requests:', transformedRequests);
+            setLoading(true);
+            setError(null);
+
+            const finger = await AsyncStorage.getItem('user_finger');
+            const response = await api.getRequest(finger);
+
+            if (response && response.success) {
+                const { requests: transformedRequests, fullData } = transformApiResponse(response);
+                console.log('📥 API Requests:', transformedRequests);
                 setRequests(transformedRequests);
+
+                // ذخیره هم لیست و هم داده‌های کامل
+                await AsyncStorage.setItem('requests_cache', JSON.stringify(transformedRequests));
+                await AsyncStorage.setItem('requests_full_data', JSON.stringify(fullData));
             } else {
-                console.log('No requests found in AsyncStorage');
+                throw new Error(response?.message || 'خطا در دریافت درخواست‌ها');
+            }
+        } catch (error) {
+            console.error('Error loading requests from API:', error);
+            setError(error.message);
+            await loadRequestsFromCache();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadRequestsFromCache = async () => {
+        try {
+            const cachedRequests = await AsyncStorage.getItem('requests_cache');
+            if (cachedRequests) {
+                const parsedRequests = JSON.parse(cachedRequests);
+                console.log('📦 Loaded from cache:', parsedRequests);
+                setRequests(parsedRequests);
+            } else {
                 setRequests([]);
             }
         } catch (error) {
-            console.error('Error loading requests:', error);
+            console.error('Error loading from cache:', error);
             setRequests([]);
         }
     };
-    console.log('requests', requests)
 
-    // Load on mount
     useEffect(() => {
-        loadRequests();
+        loadRequestsFromApi();
     }, []);
 
-    // Reload when screen comes into focus
     useFocusEffect(
         React.useCallback(() => {
-            loadRequests();
+            loadRequestsFromApi();
         }, [])
     );
 
     const handleRequestClick = (type, id) => {
         if (type === 'اجاره موردی') {
             router.push(`/rental-request?id=${id}`);
-        } else if (type === 'پروژه ای') {
+        } else if (type === 'پروژه ای' || type === 'اجاره طولانی مدت') {
             router.push(`/project-request?id=${id}`);
         }
     };
-    // const requests = [
-    //     {
-    //         "id": 1,
-    //         "type": "اجاره موردی",
-    //         "date": "۱۴۰۳/۰۸/۲۷",
-    //         "description": "کاشان بلوار مطهری میدان مدخل شهر خیابان نظیر",
-    //         "status": "pending",
-    //         "tags": [
-    //             { "label": "۲ بارگیری" },
-    //             { "label": "۱ نصب" },
-    //             { "label": "۴ تخلیه" }
-    //         ]
-    //     },
-    //     {
-    //         "id": 2,
-    //         "type": "اجاره موردی",
-    //         "date": "۱۴۰۳/۰۸/۲۷",
-    //         "description": "کاشان بلوار مطهری میدان مدخل شهر خیابان نظیر",
-    //         "status": "paid",
-    //         "tags": [
-    //             { "label": "۱ جرثقیل" },
-    //             { "label": "۴ تخلیه" }
-    //         ]
-    //     },
-    //     {
-    //         "id": 3,
-    //         "type": "اجاره موردی",
-    //         "date": "۱۴۰۳/۰۸/۲۷",
-    //         "description": "کاشان بلوار مطهری میدان مدخل شهر خیابان نظیر",
-    //         "status": "waiting",
-    //         "tags": [
-    //             { "label": "۲ بارگیری" },
-    //             { "label": "۱ نصب" },
-    //             { "label": "۴ تخلیه" },
-    //             { "label": "۴ جرثقیل" }
-    //         ]
-    //     },
-    //     {
-    //         id: 4,
-    //         type: 'پروژه ای',
-    //         date: '۱۴۰۳/۰۸/۲۷',
-    //         description: 'کاشان بلوار مطهری میدان مدخل شهر خیابان نظیر',
-    //         status: 'pending',
-    //     },
-    //     {
-    //         id: 5,
-    //         type: 'پروژه ای',
-    //         date: '۱۴۰۳/۰۸/۲۷',
-    //         description: 'کاشان بلوار مطهری میدان مدخل شهر خیابان نظیر',
-    //         status: 'paid',
-    //         tags: ['۱ جرثقیل'],
-    //     },
-    //     {
-    //         id: 6,
-    //         type: 'پروژه ای',
-    //         date: '۱۴۰۳/۰۸/۲۷',
-    //         description: 'کاشان بلوار مطهری میدان مدخل شهر خیابان نظیر',
-    //         status: 'waiting',
-    //         tags: ['۴ جرثقیل'],
-    //     }
-    // ]
 
-    const clearRequest = async () => {
-        console.log('Clearing requests...');
-        await AsyncStorage.removeItem('requests');
-        loadRequests()
-    }
+    const clearCache = async () => {
+        console.log('Clearing cache...');
+        await AsyncStorage.removeItem('requests_cache');
+        await AsyncStorage.removeItem('requests_full_data');
+        setRequests([]);
+        loadRequestsFromApi();
+    };
+
+    const retryLoading = () => {
+        setError(null);
+        loadRequestsFromApi();
+    };
 
     return (
         <SafeAreaView style={tw`flex-1 bg-white`} edges={['top', 'left', 'right']}>
             <StatusBar barStyle="dark-content" />
 
-            {/* Header */}
             <View style={tw`bg-white border-b border-gray-200 px-4 py-4`}>
-                <Text style={tw`text-lg font-bold text-gray-800 text-center`} onPress={() => clearRequest()}>درخواست‌ها</Text>
+                <Text
+                    style={tw`text-lg font-bold text-gray-800 text-center`}
+                    onLongPress={() => clearCache()}
+                >
+                    درخواست‌ها
+                </Text>
             </View>
 
-            <ScrollView
-                style={tw`flex-1`}
-                contentContainerStyle={[tw`px-4 py-4`, { paddingBottom: 100 }]}
-            >
-                {requests.map((req) => {
-                    if (req.type === 'اجاره موردی') return (
-                        <RentalReq
-                            key={req.id}
-                            item={req}
-                            onPress={(id) => handleRequestClick(req.type, id)}
-                        />
-                    );
-                    if (req.type === 'پروژه ای') return (
-                        <ProjectReq
-                            key={req.id}
-                            item={req}
-                            onPress={(id) => handleRequestClick(req.type, id)}
-                        />
-                    );
-                })}
+            {loading && (
+                <View style={tw`flex-1 items-center justify-center`}>
+                    <ActivityIndicator size="large" color="#3B82F6" />
+                    <Text style={tw`text-gray-600 mt-4`}>در حال بارگذاری...</Text>
+                </View>
+            )}
 
-            </ScrollView>
+            {!loading && error && (
+                <View style={tw`flex-1 items-center justify-center px-4`}>
+                    <Text style={tw`text-red-500 text-center mb-4`}>{error}</Text>
+                    <TouchableOpacity
+                        style={tw`bg-blue-500 px-6 py-3 rounded-lg`}
+                        onPress={retryLoading}
+                    >
+                        <Text style={tw`text-white font-bold`}>تلاش مجدد</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {!loading && !error && requests.length === 0 && (
+                <View style={tw`flex-1 items-center justify-center px-4`}>
+                    <Text style={tw`text-gray-500 text-center text-lg`}>
+                        هیچ درخواستی یافت نشد
+                    </Text>
+                    <TouchableOpacity
+                        style={tw`bg-blue-500 px-6 py-3 rounded-lg mt-4`}
+                        onPress={retryLoading}
+                    >
+                        <Text style={tw`text-white font-bold`}>بارگذاری مجدد</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {!loading && !error && requests.length > 0 && (
+                <ScrollView
+                    style={tw`flex-1`}
+                    contentContainerStyle={[tw`px-4 py-4`, { paddingBottom: 100 }]}
+                >
+                    {requests.map((req) => {
+                        if (req.type === 'اجاره موردی') {
+                            return (
+                                <RentalReq
+                                    key={`${req.type}-${req.id}`}
+                                    item={req}
+                                    onPress={(id) => handleRequestClick(req.type, id)}
+                                />
+                            );
+                        }
+                        if (req.type === 'پروژه ای' || req.type === 'اجاره طولانی مدت') {
+                            return (
+                                <ProjectReq
+                                    key={`${req.type}-${req.id}`}
+                                    item={req}
+                                    onPress={(id) => handleRequestClick(req.type, id)}
+                                />
+                            );
+                        }
+                        return null;
+                    })}
+                </ScrollView>
+            )}
         </SafeAreaView>
     );
 }

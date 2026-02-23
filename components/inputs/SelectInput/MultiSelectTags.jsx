@@ -153,7 +153,7 @@ const MultiSelectTags = ({
                 <Text
                     style={tw`absolute right-4 ${isWeb ? '-top-1/4' : '-top-2/4'} text-gray-500 text-xs bg-white px-1`}
                 >
-                    {itemKey}
+                    {label}
                 </Text>
             </TouchableOpacity>
 
@@ -170,7 +170,7 @@ const MultiSelectTags = ({
                     }}
                 >
                     <View
-                        style={[tw`bg-white border border-gray-300 rounded-b-xl overflow-hidden`, {maxHeight: 135}]}
+                        style={[tw`bg-white border border-gray-300 rounded-b-xl overflow-hidden`, { maxHeight: 135 }]}
                     >
                         <ScrollView showsVerticalScrollIndicator={false}>
                             {options.map((option, index) => {
