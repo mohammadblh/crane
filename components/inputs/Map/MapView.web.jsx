@@ -3,6 +3,9 @@ import { View, Text, TouchableOpacity, Image, TextInput, Modal, StyleSheet } fro
 import tw from 'tailwind-react-native-classnames';
 import { MapPin, ExternalLink, Edit2, Check, X } from 'lucide-react-native';
 
+// Replace with your Geoapify API key - sign up for free at https://myprojects.geoapify.com
+const GEOAPIFY_KEY = 'your_geoapify_api_key_here';
+
 // تبدیل string "lat - lng" به object {latitude, longitude}
 const parseLocationValue = (val) => {
     if (!val) return null;
@@ -22,7 +25,7 @@ export default function MapViewComponent({ field, value, onChange, readOnly = fa
 
     // Default location (Tehran)
     const defaultLocation = { latitude: 35.6892, longitude: 51.3890 };
-    const location = parseLocationValue(value) || field.defaultValue || defaultLocation;
+    const location = parseLocationValue(value) || parseLocationValue(field.defaultValue) || defaultLocation;
     const mapHeight = field.height || 300;
 
     const handleOpenInMaps = () => {
@@ -58,10 +61,12 @@ export default function MapViewComponent({ field, value, onChange, readOnly = fa
         window.open(url, '_blank');
     };
 
-    // Generate static map image URL
+    // Generate static map image URL using Geoapify
     const getStaticMapUrl = (loc = location) => {
         const zoom = 15;
-        return `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+ff0000(${loc.longitude},${loc.latitude})/${loc.longitude},${loc.latitude},${zoom},0/600x400?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw`;
+        const width = 600;
+        const height = 400;
+        return `https://maps.geoapify.com/v1/staticmap?style=osm-bright&center=lonlat:${loc.longitude},${loc.latitude}&zoom=${zoom}&marker=lonlat:${loc.longitude},${loc.latitude};color:%23ff0000;size:medium&size=${width}x${height}&apiKey=${GEOAPIFY_KEY}`;
     };
 
     return (
@@ -170,7 +175,7 @@ export default function MapViewComponent({ field, value, onChange, readOnly = fa
                                 value={tempLocation?.latitude?.toString() || ''}
                                 onChangeText={(text) => {
                                     const lat = parseFloat(text);
-                                    if (!isNaN(lat)) {
+                                    if (!isNaN(lat) && tempLocation) {
                                         setTempLocation({ ...tempLocation, latitude: lat });
                                     }
                                 }}
@@ -187,7 +192,7 @@ export default function MapViewComponent({ field, value, onChange, readOnly = fa
                                 value={tempLocation?.longitude?.toString() || ''}
                                 onChangeText={(text) => {
                                     const lng = parseFloat(text);
-                                    if (!isNaN(lng)) {
+                                    if (!isNaN(lng) && tempLocation) {
                                         setTempLocation({ ...tempLocation, longitude: lng });
                                     }
                                 }}
