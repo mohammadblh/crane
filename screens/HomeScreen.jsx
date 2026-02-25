@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   Modal,
   Image,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -19,38 +20,97 @@ import tw from 'tailwind-react-native-classnames';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../hooks/useApi';
 
+const { width } = Dimensions.get('window');
+const BANNER_WIDTH = width - 32;
+const BANNER_HEIGHT = 200;
+
 const HomeScreen = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [banners, setBanners] = useState([]);
+  const [versionData, setVersionData] = useState(null);
   const [recentRequests, setRecentRequests] = useState([]);
-  const [userName, setUserName] = useState('');
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const scrollViewRef = useRef(null);
   const router = useRouter();
-  const { userData, setUserData } = useAuth();
+  const { setUserData } = useAuth();
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Auto-scroll banners
+  useEffect(() => {
+    if (versionData?.images && versionData.images.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentBannerIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % versionData.images.length;
+          scrollViewRef.current?.scrollTo({
+            x: nextIndex * (BANNER_WIDTH + 16),
+            animated: true,
+          });
+          return nextIndex;
+        });
+      }, 4000);
+
+      return () => clearInterval(interval);
+    }
+  }, [versionData]);
+
+  // تابع کمکی برای استخراج تاریخ از fields
+  const extractDate = (fields) => {
+    if (!fields) return null;
+
+    for (const key in fields) {
+      const fieldGroup = fields[key];
+
+      if (fieldGroup['1155']) {
+        return fieldGroup['1155'][1] || fieldGroup['1155'][0];
+      }
+      if (fieldGroup['1198']) {
+        return fieldGroup['1198'][1] || fieldGroup['1198'][0];
+      }
+    }
+
+    return null;
+  };
 
   const loadDashboardData = async () => {
     try {
       const finger = await AsyncStorage.getItem('user_finger');
-      const tempUser = await AsyncStorage.getItem('temp_username');
-      setUserName(tempUser || 'کاربر گرامی');
 
-      // Fetch banners
-      const bannerRes = await api.getBanner(finger);
-      if (bannerRes && bannerRes.success && bannerRes.banners) {
-        setBanners(bannerRes.banners);
+      // Fetch version data (includes banners)
+      const versionRes = await api.getVersion();
+      console.log('versionRes', versionRes);
+      if (versionRes) {
+        setVersionData(versionRes);
       }
 
       // Fetch requests
       const reqRes = await api.getRequest(finger);
-      if (reqRes && reqRes.success && reqRes.list) {
-        // Sort by id descending to get the newest first
-        const sortedList = reqRes.list.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-        setRecentRequests(sortedList.slice(0, 3)); // show max 3 recent requests
+      console.log('reqRes', reqRes);
+
+      if (reqRes && reqRes.success && reqRes.forms) {
+        const allRequests = [];
+
+        Object.keys(reqRes.forms).forEach(formType => {
+          const formData = reqRes.forms[formType];
+
+          Object.keys(formData).forEach(formId => {
+            const item = formData[formId];
+            allRequests.push({
+              id: formId,
+              type: formType,
+              name: item.name,
+              status: item.status,
+              fields: item.fields,
+              submit_date: extractDate(item.fields)
+            });
+          });
+        });
+
+        const sortedList = allRequests.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+        setRecentRequests(sortedList.slice(0, 3));
       }
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -67,27 +127,26 @@ const HomeScreen = () => {
 
   const handleLogout = async () => {
     try {
-      // Close modal first
       setShowProfileModal(false);
-
-      // Wait a bit for modal to close
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Clear user data from AsyncStorage
       await AsyncStorage.removeItem('user_finger');
       await AsyncStorage.removeItem('temp_username');
       await AsyncStorage.removeItem('temp_finger');
       await AsyncStorage.removeItem('temp_mobile');
       await AsyncStorage.removeItem('user_data');
 
-      // Clear auth context
       setUserData(null);
-
-      // Navigate to login
       router.replace('/auth/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
+  };
+
+  const handleBannerScroll = (event) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / (BANNER_WIDTH + 16));
+    setCurrentBannerIndex(index);
   };
 
   const ProfileModal = () => (
@@ -110,7 +169,6 @@ const HomeScreen = () => {
               router.push('/profile');
             }}
           >
-
             <Ionicons name="person-outline" size={20} color="#1F2937" />
             <Text style={styles.profileModalText}>پروفایل</Text>
           </TouchableOpacity>
@@ -133,15 +191,23 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-      {/* Header with Avatar */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={tw`text-base text-gray-500 font-bold ml-1`}>CRANE</Text>
+            {versionData?.logo && (
+              <Image
+                source={{ uri: versionData.logo }}
+                style={{ width: 36, height: 36 }}
+                resizeMode="contain"
+              />
+            )}
           </View>
 
           <View style={tw`flex-row items-center`}>
-            <Text style={styles.headerTitle}>سلام، {userName}</Text>
+            <Text style={styles.headerTitle}>
+              {versionData?.name || 'سامانه جرثقیل'}
+            </Text>
           </View>
 
           <TouchableOpacity
@@ -149,7 +215,7 @@ const HomeScreen = () => {
             onPress={() => setShowProfileModal(true)}
           >
             <View style={styles.avatarContainer}>
-              <Ionicons name="person" size={24} color="#ffffff" />
+              <Ionicons name="person" size={24} color="#1F2937" />
             </View>
           </TouchableOpacity>
         </View>
@@ -161,129 +227,205 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3B82F6"]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#EAB308"]}
+            tintColor="#EAB308"
+          />
         }
       >
         {loading && !refreshing ? (
           <View style={tw`mt-10 items-center justify-center`}>
-            <ActivityIndicator size="large" color="#3B82F6" />
+            <ActivityIndicator size="large" color="#EAB308" />
           </View>
         ) : (
-          <View style={tw`p-4`}>
-            {/* Banner Section */}
-            {banners.length > 0 && (
+          <View style={tw`pt-6`}>
+            {/* Image Slider Section */}
+            {versionData?.images && versionData.images.length > 0 && (
               <View style={tw`mb-6`}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={tw`-mx-4 px-4`}>
-                  {banners.map((banner, index) => (
-                    <TouchableOpacity key={index} style={tw`mr-4 rounded-2xl overflow-hidden shadow-sm bg-white`} activeOpacity={0.9}>
+                <ScrollView
+                  ref={scrollViewRef}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  pagingEnabled
+                  snapToInterval={BANNER_WIDTH + 16}
+                  decelerationRate="fast"
+                  contentContainerStyle={{ paddingHorizontal: 16 }}
+                  onScroll={handleBannerScroll}
+                  scrollEventThrottle={16}
+                >
+                  {versionData.images.map((imageUrl, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.bannerContainer,
+                        { width: BANNER_WIDTH, height: BANNER_HEIGHT }
+                      ]}
+                    >
                       <Image
-                        source={{ uri: `https://crane.feham.ir/modules/Icms/content/images/${banner.image}` }}
-                        style={{ width: 300, height: 160 }}
+                        source={{ uri: imageUrl }}
+                        style={styles.bannerImage}
                         resizeMode="cover"
                       />
-                    </TouchableOpacity>
+                      <View style={styles.bannerGradient} />
+                    </View>
                   ))}
                 </ScrollView>
+
+                {/* Pagination Dots */}
+                {versionData.images.length > 1 && (
+                  <View style={styles.paginationContainer}>
+                    {versionData.images.map((_, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.paginationDot,
+                          currentBannerIndex === index && styles.paginationDotActive
+                        ]}
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
             )}
 
-            {/* Quick Actions / Services Section */}
-            <View style={tw`mb-8`}>
-              <Text style={tw`text-lg font-bold text-gray-800 mb-4 text-right`}>ثبت درخواست جدید</Text>
+            {/* Quick Actions Section */}
+            <View style={tw`px-4 mb-8`}>
+              <Text style={tw`text-xl font-bold text-gray-900 mb-4 text-right`}>
+                ثبت درخواست جدید
+              </Text>
               <View style={tw`flex-row justify-between`}>
-                {/* Rental Item */}
                 <TouchableOpacity
-                  style={tw`flex-1 bg-white p-4 rounded-2xl mr-2 shadow-sm border border-gray-100 items-center`}
+                  style={styles.serviceCard}
                   onPress={() => router.push('/rental-short')}
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                 >
-                  <View style={tw`w-14 h-14 bg-blue-50 rounded-full items-center justify-center mb-3`}>
-                    <MaterialCommunityIcons name="truck-flatbed" size={30} color="#3B82F6" />
+                  <View style={styles.serviceIconContainer}>
+                    <MaterialCommunityIcons name="truck-flatbed" size={32} color="#1F2937" />
                   </View>
-                  <Text style={tw`text-gray-800 font-bold mb-1`}>اجاره موردی</Text>
-                  <Text style={tw`text-gray-500 text-xs text-center`}>ثبت سریع کفی</Text>
+                  <Text style={tw`text-gray-900 font-bold text-base mb-1`}>اجاره موردی</Text>
+                  <Text style={tw`text-gray-600 text-xs text-center`}>ثبت سریع کفی</Text>
                 </TouchableOpacity>
 
-                {/* Project Item */}
                 <TouchableOpacity
-                  style={tw`flex-1 bg-white p-4 rounded-2xl ml-2 shadow-sm border border-gray-100 items-center`}
-                  onPress={() => router.push('/project-req')}
-                  activeOpacity={0.7}
+                  style={styles.serviceCard}
+                  onPress={() => router.push('/projects')}
+                  activeOpacity={0.8}
                 >
-                  <View style={tw`w-14 h-14 bg-indigo-50 rounded-full items-center justify-center mb-3`}>
-                    <MaterialCommunityIcons name="crane" size={30} color="#6366F1" />
+                  <View style={styles.serviceIconContainer}>
+                    <MaterialCommunityIcons name="crane" size={32} color="#1F2937" />
                   </View>
-                  <Text style={tw`text-gray-800 font-bold mb-1`}>اجاره پروژه‌ای</Text>
-                  <Text style={tw`text-gray-500 text-xs text-center`}>ویژه پروژه‌های بزرگ</Text>
+                  <Text style={tw`text-gray-900 font-bold text-base mb-1`}>اجاره پروژه‌ای</Text>
+                  <Text style={tw`text-gray-600 text-xs text-center`}>ویژه پروژه‌های بزرگ</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Recent Requests Section */}
-            <View style={tw`mb-6`}>
+            <View style={tw`px-4 mb-6`}>
               <View style={tw`flex-row justify-between items-center mb-4`}>
                 <TouchableOpacity onPress={() => router.push('/(tabs)/requests')}>
-                  <Text style={tw`text-blue-500 text-sm`}>مشاهده همه</Text>
+                  <Text style={tw`text-yellow-600 text-sm font-bold`}>مشاهده همه</Text>
                 </TouchableOpacity>
-                <Text style={tw`text-lg font-bold text-gray-800 text-right`}>آخرین درخواست‌ها</Text>
+                <Text style={tw`text-xl font-bold text-gray-900 text-right`}>
+                  آخرین درخواست‌ها
+                </Text>
               </View>
 
               {recentRequests.length > 0 ? (
                 recentRequests.map((req, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={tw`bg-white p-4 rounded-2xl mb-3 shadow-sm border border-gray-100 flex-row justify-between items-center`}
-                    onPress={() => {
-                      if (req.type === 'اجاره موردی (کفی)') {
-                        router.push(`/requests/RentalReqScreen?id=${req.id}`);
-                      } else {
-                        router.push(`/requests/ProjectReqScreen?id=${req.id}`);
-                      }
-                    }}
+                    style={styles.requestCard}
+                    onPress={() => router.push(`rental-request?id=${req.id}`)}
+                  // onPress={() => {
+                  //   if (req.type === 'اجاره موردی') {
+                  //     router.push(`/requests/RentalReqScreen?id=${req.id}`);
+                  //   } else if (req.type === 'پروژه ای') {
+                  //     router.push(`/requests/ProjectReqScreen?id=${req.id}`);
+                  //   } else {
+                  //     router.push(`/requests/DetailScreen?id=${req.id}&type=${req.type}`);
+                  //   }
+                  // }}
                   >
                     <Ionicons name="chevron-back" size={20} color="#9CA3AF" />
-                    <View style={tw`items-end`}>
-                      <Text style={tw`text-gray-800 font-bold mb-1`}>{req.type}</Text>
-                      <View style={tw`flex-row items-center`}>
-                        <Text style={tw`text-xs text-gray-500 mr-2`}>{req.submit_date}</Text>
-                        <View style={tw`px-2 py-1 bg-yellow-50 rounded text-xs`}>
-                          <Text style={tw`text-yellow-600 text-xs`}>در انتظار قیمت‌گذاری</Text>
+                    <View style={tw`flex-1 items-end`}>
+                      <Text style={tw`text-gray-900 font-bold text-base mb-1`}>
+                        {req.type}
+                      </Text>
+                      <Text style={tw`text-gray-600 text-sm mb-2 text-right`}>
+                        {req.name}
+                      </Text>
+                      <View style={tw`flex-row items-center justify-end w-full`}>
+                        {req.submit_date && (
+                          <Text style={tw`text-xs text-gray-500 mr-3`}>
+                            {req.submit_date}
+                          </Text>
+                        )}
+                        <View style={[
+                          styles.statusBadge,
+                          req.status === 'پرداخت شده' && { backgroundColor: '#D1FAE5', borderColor: '#86EFAC' },
+                          req.status === 'منتظر پرداخت' && { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' },
+                          req.status === 'در حال بررسی' && { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' },
+                        ]}>
+                          <Text style={[
+                            tw`text-xs font-bold`,
+                            req.status === 'پرداخت شده' && tw`text-green-700`,
+                            req.status === 'منتظر پرداخت' && tw`text-red-700`,
+                            req.status === 'در حال بررسی' && tw`text-yellow-700`,
+                          ]}>
+                            {req.status}
+                          </Text>
                         </View>
                       </View>
                     </View>
                   </TouchableOpacity>
                 ))
               ) : (
-                <View style={tw`bg-gray-100 rounded-2xl p-6 items-center border border-gray-200 border-dashed`}>
-                  <Ionicons name="document-text-outline" size={40} color="#9CA3AF" style={tw`mb-2`} />
-                  <Text style={tw`text-gray-500 text-center`}>
-                    شما هنوز هیچ درخواستی ثبت نکرده‌اید
+                <View style={styles.emptyRequestsContainer}>
+                  <View style={styles.emptyIconContainer}>
+                    <Ionicons name="document-text-outline" size={48} color="#D1D5DB" />
+                  </View>
+                  <Text style={tw`text-gray-600 text-base text-center mb-1`}>
+                    هنوز درخواستی ثبت نشده
+                  </Text>
+                  <Text style={tw`text-gray-500 text-sm text-center mb-4`}>
+                    اولین درخواست خود را ثبت کنید
                   </Text>
                   <TouchableOpacity
-                    style={tw`mt-4 bg-blue-50 px-4 py-2 rounded-lg`}
+                    style={styles.emptyActionButton}
                     onPress={() => router.push('/rental-short')}
                   >
-                    <Text style={tw`text-blue-600 font-bold`}>ثبت اولین درخواست</Text>
+                    <Text style={tw`text-gray-900 font-bold text-sm`}>
+                      ثبت درخواست جدید
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
             </View>
 
+            {/* Version Info */}
+            {versionData?.version && (
+              <View style={tw`items-center py-4`}>
+                <Text style={tw`text-gray-400 text-xs`}>
+                  نسخه {versionData.version}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
 
-      {/* Profile Modal */}
       <ProfileModal />
-    </SafeAreaView >
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f8f8",
-    fontFamily: "Dana",
+    backgroundColor: "#FAFAFA",
   },
   header: {
     backgroundColor: "#ffffff",
@@ -302,12 +444,13 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 17,
+    fontWeight: "700",
     color: "#1F2937",
-    fontFamily: "Dana",
   },
   avatarButton: {
     padding: 4,
@@ -316,30 +459,130 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#FEF3C7",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 2,
+    borderColor: "#EAB308",
   },
   content: {
     flex: 1,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#FAFAFA",
   },
-  emptyState: {
+  bannerContainer: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bannerGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '30%',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D1D5DB',
+    marginHorizontal: 4,
+  },
+  paginationDotActive: {
+    backgroundColor: '#EAB308',
+    width: 24,
+  },
+  serviceCard: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 100,
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 16,
+    marginHorizontal: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#F3F4F6',
   },
-  emptyStateText: {
-    fontSize: 16,
-    color: "#9CA3AF",
-    textAlign: "center",
-    fontFamily: "Dana",
+  serviceIconContainer: {
+    width: 64,
+    height: 64,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#FDE68A',
+  },
+  requestCard: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  emptyRequestsContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#F3F4F6',
+    borderStyle: 'dashed',
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyActionButton: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#EAB308',
   },
   profileModalOverlay: {
     flex: 1,
@@ -375,7 +618,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#1F2937",
     fontWeight: "500",
-    fontFamily: "Dana",
   },
   logoutText: {
     color: "#DC2626",

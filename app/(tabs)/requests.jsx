@@ -10,8 +10,6 @@ import ProjectReq from '../../components/cards/projectReq';
 import RentalReq from '../../components/cards/rentalReq';
 import { api } from '../../hooks/useApi';
 
-// در transformApiResponse - اضافه کردن برای پروژه‌ای
-
 const transformApiResponse = (apiResponse) => {
     if (!apiResponse || !apiResponse.forms) {
         return { requests: [], fullData: {} };
@@ -22,12 +20,12 @@ const transformApiResponse = (apiResponse) => {
 
     Object.entries(apiResponse.forms).forEach(([formType, formData]) => {
         Object.entries(formData).forEach(([requestId, requestData]) => {
-            const { name, fields } = requestData;
+            const { name, status, fields } = requestData; // ✅ اضافه کردن status
 
-            // ذخیره داده کامل
             fullData[requestId] = {
                 type: formType,
                 name: name,
+                status: status, // ✅ ذخیره status
                 fields: fields,
                 rawData: requestData
             };
@@ -36,41 +34,33 @@ const transformApiResponse = (apiResponse) => {
             const workTypes = {};
             let date = 'تاریخ نامشخص';
             let workshopName = '';
-            let status = 'pending';
             let description = '';
 
             if (fields) {
-                // برای پروژه‌ای
                 if (formType === 'پروژه ای' || formType === 'اجاره طولانی مدت') {
                     const mainFields = fields['1'] || {};
 
-                    // فیلد 1211: نام کارگاه
                     if (mainFields['1211'] && Array.isArray(mainFields['1211']) && mainFields['1211'][0]) {
                         workshopName = mainFields['1211'][0];
                     }
 
-                    // فیلد 1221: توضیحات
                     if (mainFields['1221'] && Array.isArray(mainFields['1221']) && mainFields['1221'][0]) {
                         description = mainFields['1221'][0];
                     }
 
-                    // فیلد 1236: دسته‌بندی
                     if (mainFields['1236'] && Array.isArray(mainFields['1236']) && mainFields['1236'][1]) {
                         tags.push(mainFields['1236'][1]);
                     }
 
-                    // فیلد 1223: بیمه
                     if (mainFields['1223'] && Array.isArray(mainFields['1223']) && mainFields['1223'][1]) {
                         tags.push(mainFields['1223'][1]);
                     }
 
-                    // فیلد 1226: پیش پرداخت
-                    if (mainFields['1226'] && Array.isArray(mainFields['1226']) && mainFields['1226'][1]) {
-                        status = 'waiting';
+                    // تاریخ برای پروژه‌ای
+                    if (mainFields['1198'] && Array.isArray(mainFields['1198']) && mainFields['1198'][0]) {
+                        date = mainFields['1198'][0];
                     }
-                }
-                // برای اجاره موردی
-                else {
+                } else {
                     Object.values(fields).forEach(fieldGroup => {
                         Object.entries(fieldGroup).forEach(([fieldId, fieldValue]) => {
                             if (fieldId === '1142' && Array.isArray(fieldValue) && fieldValue[0]) {
@@ -91,9 +81,6 @@ const transformApiResponse = (apiResponse) => {
                                     date = fieldValue[0];
                                 }
                             }
-                            if (fieldId === '1159' && Array.isArray(fieldValue) && fieldValue[1]) {
-                                status = 'waiting';
-                            }
                         });
                     });
 
@@ -107,8 +94,8 @@ const transformApiResponse = (apiResponse) => {
                 }
             }
 
-            // تشخیص description نهایی
-            let finalDescription = workshopName || description || name || 'بدون نام';
+            console.log('workshopName || description || name', workshopName, description, name)
+            let finalDescription = name || workshopName || description || 'بدون نام';
 
             if (!finalDescription || finalDescription === 'بدون نام') {
                 if (fields && fields['1']) {
@@ -124,7 +111,7 @@ const transformApiResponse = (apiResponse) => {
                 type: formType,
                 date: date,
                 description: finalDescription,
-                status: status,
+                status: status, // ✅ استفاده از status واقعی از سرور
                 tags: tags.length > 0 ? tags : undefined
             });
         });
@@ -138,6 +125,8 @@ const transformApiResponse = (apiResponse) => {
 
     return { requests, fullData };
 };
+
+
 export default function RequestsScreen() {
     const router = useRouter();
     const [requests, setRequests] = useState([]);

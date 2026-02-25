@@ -1,84 +1,133 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import tw from 'tailwind-react-native-classnames';
 
-const statusTheme = {
-    pending: {
-        label: "در انتظار قیمت‌گذاری",
-        bg: "bg-yellow-50",
-        border: "border-yellow-300",
-        btnBg: "bg-yellow-100",
-        btnBorder: "border-yellow-400",
-        btnText: "text-yellow-700",
-    },
-    paid: {
-        label: "پرداخت شده",
-        bg: "bg-green-50",
-        border: "border-green-300",
-        btnBg: "bg-green-100",
-        btnBorder: "border-green-400",
-        btnText: "text-green-700",
-    },
-    waiting: {
-        label: "در انتظار پرداخت",
-        bg: "bg-blue-50",
-        border: "border-blue-300",
-        btnBg: "bg-blue-100",
-        btnBorder: "border-blue-400",
-        btnText: "text-blue-700",
+const getStatusTheme = (status) => {
+    // استفاده از همان status که از سرور می‌آید
+    switch (status) {
+        case 'پرداخت شده':
+            return {
+                label: status,
+                statusBg: "#D1FAE5",
+                statusBorder: "#86EFAC",
+                statusText: "#065F46",
+            };
+        case 'منتظر پرداخت':
+            return {
+                label: status,
+                statusBg: "#FEE2E2",
+                statusBorder: "#FCA5A5",
+                statusText: "#991B1B",
+            };
+        case 'در حال بررسی':
+        default:
+            return {
+                label: status || 'در حال بررسی',
+                statusBg: "#FEF3C7",
+                statusBorder: "#FDE68A",
+                statusText: "#92400E",
+            };
     }
 };
 
 export default function RentalReq({ item, onPress }) {
-    const theme = statusTheme[item.status] || statusTheme.pending;
+    console.log('item', item)
+    const theme = getStatusTheme(item.status);
 
     return (
-        <SafeAreaView edges={[]}>
-            <TouchableOpacity
-                style={tw`${theme.bg} border-2 ${theme.border} rounded-xl p-3 mb-4`}
-                onPress={() => onPress && onPress(item.id)}
-                activeOpacity={0.7}
-            >
-                <View style={tw`flex-row justify-between mb-2`}>
-                    <Text style={tw`text-gray-600 text-xs`}>{item.date}</Text>
-                    <Text style={tw`text-gray-800 font-bold text-sm`}>{item.type}</Text>
+        <TouchableOpacity
+            style={styles.card}
+            onPress={() => onPress && onPress(item.id)}
+            activeOpacity={0.8}
+        >
+            <View style={tw`flex-row items-center justify-between mb-3`}>
+                <Ionicons name="chevron-back" size={20} color="#9CA3AF" />
+
+                <View style={tw`flex-1 items-end mr-3`}>
+                    <Text style={tw`text-gray-900 font-bold text-base mb-1`}>
+                        {item.type}
+                    </Text>
+                    <Text style={tw`text-gray-600 text-sm text-right`}>
+                        {item.description}
+                    </Text>
                 </View>
+            </View>
 
-                <Text style={tw`text-gray-700 text-xs text-right mb-3`}>
-                    {item.description}
-                </Text>
-
-                <View style={tw`flex-row items-center justify-between`}>
-                    <TouchableOpacity
-                        style={tw`${theme.btnBg} border-2 ${theme.btnBorder} px-4 py-1.5 rounded-full`}
+            <View style={tw`flex-row items-center justify-between`}>
+                {item.tags && item.tags.length > 0 && (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={tw`flex-1 mr-3`}
+                        contentContainerStyle={tw`flex-row-reverse`}
                     >
-                        <Text style={tw`${theme.btnText} text-xs font-bold`}>
+                        {item.tags.map((tag, i) => (
+                            <View
+                                key={i}
+                                style={styles.tagBadge}
+                            >
+                                <Text style={tw`text-gray-700 text-xs font-medium`}>
+                                    {tag}
+                                </Text>
+                            </View>
+                        ))}
+                    </ScrollView>
+                )}
+
+                <View style={tw`items-end`}>
+                    {item.date && (
+                        <Text style={tw`text-xs text-gray-500 mb-2`}>
+                            {item.date}
+                        </Text>
+                    )}
+                    <View style={[
+                        styles.statusBadge,
+                        {
+                            backgroundColor: theme.statusBg,
+                            borderColor: theme.statusBorder
+                        }
+                    ]}>
+                        <Text style={[
+                            tw`text-xs font-bold`,
+                            { color: theme.statusText }
+                        ]}>
                             {theme.label}
                         </Text>
-                    </TouchableOpacity>
-
-                    {item.tags && item.tags.length > 0 && (
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            style={tw`max-w-1/2`}
-                            contentContainerStyle={tw`flex-row-reverse items-center`}
-                        >
-                            {item.tags.map((tag, i) => (
-                                <View
-                                    key={i}
-                                    style={tw`bg-white px-3 py-1 rounded-full border border-gray-300 ml-1.5`}
-                                >
-                                    <Text style={tw`text-gray-700 text-xs`}>
-                                        {tag}
-                                    </Text>
-                                </View>
-                            ))}
-                        </ScrollView>
-                    )}
+                    </View>
                 </View>
-            </TouchableOpacity>
-        </SafeAreaView>
+            </View>
+        </TouchableOpacity>
     );
 }
+
+const styles = StyleSheet.create({
+    card: {
+        backgroundColor: '#ffffff',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    statusBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        borderWidth: 1,
+    },
+    tagBadge: {
+        backgroundColor: '#F9FAFB',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        marginLeft: 6,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    }
+});

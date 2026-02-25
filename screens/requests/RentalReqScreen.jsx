@@ -1,51 +1,39 @@
 // rental-request.js
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StatusBar, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StatusBar, ScrollView, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import tw from 'tailwind-react-native-classnames';
-import { ArrowRight } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../../hooks/useApi';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
-// نقشه فیلدها برای خوانایی بهتر
-const FIELD_MAP = {
-    '1142': 'workshopName',      // نام کارگاه
-    '1147': 'workType',           // نوع کار (بارگیری/تخلیه/نصب/جابجایی)
-    '1154': 'materialType',       // نوع مصالح
-    '1155': 'date',               // تاریخ
-    '1177': 'location',           // محل اجرا
-    '1148': 'tonnage',            // تناژ
-    '1178': 'length',             // طول
-    '1179': 'width',              // عرض
-    '1180': 'environmentalConditions', // شرایط محیطی
-    '1185': 'insurance',          // بیمه
-    '1186': 'additionalServices', // خدمات اضافی
-    '1159': 'prepaymentPercent',  // درصد پیش پرداخت
-    '1160': 'executionPeriod',    // مدت اجرا
-};
-
 const getStatusTheme = (status) => {
-    const themes = {
-        'pending': {
-            label: 'در انتظار قیمت‌گذاری',
-            color: 'text-yellow-600',
-            bg: 'bg-yellow-50'
-        },
-        'waiting': {
-            label: 'در انتظار پرداخت',
-            color: 'text-blue-600',
-            bg: 'bg-blue-50'
-        },
-        'paid': {
-            label: 'پرداخت شده',
-            color: 'text-green-600',
-            bg: 'bg-green-50'
-        }
-    };
-    return themes[status] || themes.pending;
+    switch (status) {
+        case 'پرداخت شده':
+            return {
+                label: status,
+                statusBg: "#D1FAE5",
+                statusBorder: "#86EFAC",
+                statusText: "#065F46",
+            };
+        case 'منتظر پرداخت':
+            return {
+                label: status,
+                statusBg: "#FEE2E2",
+                statusBorder: "#FCA5A5",
+                statusText: "#991B1B",
+            };
+        case 'در حال بررسی':
+        default:
+            return {
+                label: status || 'در حال بررسی',
+                statusBg: "#FEF3C7",
+                statusBorder: "#FDE68A",
+                statusText: "#92400E",
+            };
+    }
 };
 
 export default function RentalReqScreen() {
@@ -83,17 +71,14 @@ export default function RentalReqScreen() {
         }
     };
 
-    // تبدیل داده‌های خام به فرمت قابل نمایش
     const parseRequestData = () => {
         if (!requestData || !requestData.fields) return null;
 
         const works = [];
         let workshopName = '';
         let mainDate = 'تاریخ نامشخص';
-        let status = 'pending';
         let totalPrice = null;
 
-        // پیمایش در همه گروه‌های کاری
         Object.entries(requestData.fields).forEach(([groupIndex, fieldGroup]) => {
             const work = {
                 groupNumber: groupIndex,
@@ -116,7 +101,7 @@ export default function RentalReqScreen() {
 
                 switch (fieldId) {
                     case '1142':
-                        workshopName = Array.isArray(fieldValue) && fieldValue[0] ? fieldValue[0] : '';
+                        workshopName = Array.isArray(fieldValue) && fieldValue[1] ? fieldValue[1] : '';
                         break;
                     case '1147':
                         work.workType = value;
@@ -151,7 +136,6 @@ export default function RentalReqScreen() {
                         break;
                     case '1159':
                         work.prepaymentPercent = value;
-                        if (value) status = 'waiting';
                         break;
                     case '1160':
                         work.executionPeriod = value;
@@ -165,7 +149,7 @@ export default function RentalReqScreen() {
         return {
             workshopName,
             mainDate,
-            status,
+            status: requestData.status, // ✅ استفاده از status واقعی
             works,
             totalPrice
         };
@@ -180,7 +164,6 @@ export default function RentalReqScreen() {
             const response = await api.removeForm(finger, id);
 
             if (response && response.success) {
-                // آپدیت کردن استوریج برای حذف درخواست از لیست لوکال (اختیاری)
                 const fullDataString = await AsyncStorage.getItem('requests_full_data');
                 if (fullDataString) {
                     const fullData = JSON.parse(fullDataString);
@@ -204,10 +187,10 @@ export default function RentalReqScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView style={tw`flex-1 bg-gray-50`}>
-                <View style={tw`flex-1 items-center justify-center`}>
-                    <ActivityIndicator size="large" color="#3B82F6" />
-                    <Text style={tw`text-gray-600 mt-4`}>در حال بارگذاری...</Text>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.centerContent}>
+                    <ActivityIndicator size="large" color="#EAB308" />
+                    <Text style={styles.loadingText}>در حال بارگذاری...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -215,14 +198,15 @@ export default function RentalReqScreen() {
 
     if (!requestData) {
         return (
-            <SafeAreaView style={tw`flex-1 bg-gray-50`}>
-                <View style={tw`flex-1 items-center justify-center px-4`}>
-                    <Text style={tw`text-red-500 text-center`}>درخواست یافت نشد</Text>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.centerContent}>
+                    <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+                    <Text style={styles.errorText}>درخواست یافت نشد</Text>
                     <TouchableOpacity
-                        style={tw`bg-blue-500 px-6 py-3 rounded-lg mt-4`}
+                        style={styles.backButton}
                         onPress={() => router.back()}
                     >
-                        <Text style={tw`text-white font-bold`}>بازگشت</Text>
+                        <Text style={styles.backButtonText}>بازگشت</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -233,30 +217,42 @@ export default function RentalReqScreen() {
     const statusTheme = getStatusTheme(parsedData.status);
 
     return (
-        <SafeAreaView style={tw`flex-1 bg-gray-50`}>
-            <StatusBar barStyle="dark-content" />
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
             {/* Header */}
-            <View style={tw`bg-white border-b border-gray-200 px-4 py-4 flex-row items-center justify-between`}>
-                <View style={tw`w-6`} />
-                <Text style={tw`text-lg font-bold text-gray-800`}>اجاره موردی</Text>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <ArrowRight size={24} color="#374151" />
+            <View style={styles.header}>
+                <View style={styles.headerSpacer} />
+                <Text style={styles.headerTitle}>اجاره موردی</Text>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
+                    <Ionicons name="arrow-forward" size={24} color="#1F2937" />
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={tw`flex-1`}>
-                <View style={tw`px-4 py-6`}>
+            <ScrollView
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.content}>
                     {/* Status Header */}
-                    <View style={tw`${statusTheme.bg} rounded-xl p-4 mb-6`}>
-                        <View style={tw`flex-row items-center justify-between mb-2`}>
-                            <Text style={tw`text-gray-600 text-sm`}>{parsedData.mainDate}</Text>
-                            <Text style={[tw`font-bold text-lg`, tw`${statusTheme.color}`]}>
+                    <View style={[
+                        styles.statusHeader,
+                        {
+                            backgroundColor: statusTheme.statusBg,
+                            borderColor: statusTheme.statusBorder
+                        }
+                    ]}>
+                        <View style={styles.statusHeaderTop}>
+                            <Text style={styles.dateText}>{parsedData.mainDate}</Text>
+                            <Text style={[
+                                styles.statusLabel,
+                                { color: statusTheme.statusText }
+                            ]}>
                                 {statusTheme.label}
                             </Text>
                         </View>
                         {parsedData.workshopName && (
-                            <Text style={tw`text-gray-700 text-base text-right mt-2`}>
+                            <Text style={styles.workshopText}>
                                 کارگاه: {parsedData.workshopName}
                             </Text>
                         )}
@@ -265,99 +261,99 @@ export default function RentalReqScreen() {
                     {/* Work Cards */}
                     {parsedData.works.map((work, index) => (
                         work.workType && (
-                            <View key={index} style={tw`bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100`}>
-                                {/* Header */}
-                                <View style={tw`flex-row items-center justify-between mb-4 pb-3 border-b border-gray-100`}>
-                                    <Text style={tw`text-gray-600 text-sm`}>
+                            <View key={index} style={styles.workCard}>
+                                {/* Card Header */}
+                                <View style={styles.workCardHeader}>
+                                    <Text style={styles.workCounter}>
                                         {index + 1}/{parsedData.works.length}
                                     </Text>
-                                    <Text style={tw`text-gray-800 font-bold text-lg`}>
+                                    <Text style={styles.workType}>
                                         {work.workType}
                                     </Text>
                                 </View>
 
-                                {/* Details Grid */}
-                                <View style={tw`mb-3`}>
+                                {/* Details */}
+                                <View style={styles.detailsContainer}>
                                     {work.materialType && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <Text style={tw`text-gray-700 text-sm`}>{work.materialType}</Text>
-                                            <Text style={tw`text-gray-500 text-sm`}>نوع مصالح:</Text>
+                                        <View style={styles.detailRow}>
+                                            <Text style={styles.detailValue}>{work.materialType}</Text>
+                                            <Text style={styles.detailLabel}>نوع مصالح:</Text>
                                         </View>
                                     )}
 
                                     {work.location && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <Text style={tw`text-gray-700 text-sm flex-1 text-right`} numberOfLines={2}>
+                                        <View style={styles.detailRow}>
+                                            <Text style={styles.detailValueMultiline} numberOfLines={2}>
                                                 {work.location}
                                             </Text>
-                                            <Text style={tw`text-gray-500 text-sm mr-2`}>محل اجرا:</Text>
+                                            <Text style={styles.detailLabel}>محل اجرا:</Text>
                                         </View>
                                     )}
 
                                     {work.date && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <Text style={tw`text-gray-700 text-sm`}>{work.date}</Text>
-                                            <Text style={tw`text-gray-500 text-sm`}>تاریخ:</Text>
+                                        <View style={styles.detailRow}>
+                                            <Text style={styles.detailValue}>{work.date}</Text>
+                                            <Text style={styles.detailLabel}>تاریخ:</Text>
                                         </View>
                                     )}
 
                                     {(work.tonnage || work.length || work.width) && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <View style={tw`flex-row`}>
+                                        <View style={styles.detailRow}>
+                                            <View style={styles.dimensionsContainer}>
                                                 {work.tonnage && (
-                                                    <Text style={tw`text-gray-700 text-sm ml-3`}>
+                                                    <Text style={styles.dimensionItem}>
                                                         تناژ: {work.tonnage}
                                                     </Text>
                                                 )}
                                                 {work.length && (
-                                                    <Text style={tw`text-gray-700 text-sm ml-3`}>
+                                                    <Text style={styles.dimensionItem}>
                                                         طول: {work.length}
                                                     </Text>
                                                 )}
                                                 {work.width && (
-                                                    <Text style={tw`text-gray-700 text-sm`}>
+                                                    <Text style={styles.dimensionItem}>
                                                         عرض: {work.width}
                                                     </Text>
                                                 )}
                                             </View>
-                                            <Text style={tw`text-gray-500 text-sm`}>ابعاد:</Text>
+                                            <Text style={styles.detailLabel}>ابعاد:</Text>
                                         </View>
                                     )}
 
                                     {work.environmentalConditions && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <Text style={tw`text-gray-700 text-sm flex-1 text-right`} numberOfLines={2}>
+                                        <View style={styles.detailRow}>
+                                            <Text style={styles.detailValueMultiline} numberOfLines={2}>
                                                 {work.environmentalConditions}
                                             </Text>
-                                            <Text style={tw`text-gray-500 text-sm mr-2`}>شرایط محیطی:</Text>
+                                            <Text style={styles.detailLabel}>شرایط محیطی:</Text>
                                         </View>
                                     )}
 
                                     {work.insurance && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <Text style={tw`text-gray-700 text-sm`}>{work.insurance}</Text>
-                                            <Text style={tw`text-gray-500 text-sm`}>بیمه:</Text>
+                                        <View style={styles.detailRow}>
+                                            <Text style={styles.detailValue}>{work.insurance}</Text>
+                                            <Text style={styles.detailLabel}>بیمه:</Text>
                                         </View>
                                     )}
 
                                     {work.additionalServices && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <Text style={tw`text-gray-700 text-sm`}>{work.additionalServices}</Text>
-                                            <Text style={tw`text-gray-500 text-sm`}>خدمات اضافی:</Text>
+                                        <View style={styles.detailRow}>
+                                            <Text style={styles.detailValue}>{work.additionalServices}</Text>
+                                            <Text style={styles.detailLabel}>خدمات اضافی:</Text>
                                         </View>
                                     )}
 
                                     {work.prepaymentPercent && (
-                                        <View style={tw`flex-row justify-between py-2 border-b border-gray-50`}>
-                                            <Text style={tw`text-gray-700 text-sm`}>{work.prepaymentPercent}</Text>
-                                            <Text style={tw`text-gray-500 text-sm`}>پیش پرداخت:</Text>
+                                        <View style={styles.detailRow}>
+                                            <Text style={styles.detailValue}>{work.prepaymentPercent}</Text>
+                                            <Text style={styles.detailLabel}>پیش پرداخت:</Text>
                                         </View>
                                     )}
 
                                     {work.executionPeriod && (
-                                        <View style={tw`flex-row justify-between py-2`}>
-                                            <Text style={tw`text-gray-700 text-sm`}>{work.executionPeriod}</Text>
-                                            <Text style={tw`text-gray-500 text-sm`}>مدت اجرا:</Text>
+                                        <View style={[styles.detailRow, styles.lastDetailRow]}>
+                                            <Text style={styles.detailValue}>{work.executionPeriod}</Text>
+                                            <Text style={styles.detailLabel}>مدت اجرا:</Text>
                                         </View>
                                     )}
                                 </View>
@@ -365,29 +361,23 @@ export default function RentalReqScreen() {
                         )
                     ))}
 
-                    {/* Total Price (if available) */}
+                    {/* Total Price */}
                     {parsedData.totalPrice && (
-                        <View style={tw`bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200`}>
-                            <View style={tw`flex-row items-center justify-between`}>
-                                <Text style={tw`text-blue-700 font-bold text-lg`}>
-                                    {parsedData.totalPrice} تومان
-                                </Text>
-                                <Text style={tw`text-blue-600 font-bold text-base`}>
-                                    قیمت کل:
-                                </Text>
-                            </View>
+                        <View style={styles.priceCard}>
+                            <Text style={styles.priceValue}>
+                                {parsedData.totalPrice} تومان
+                            </Text>
+                            <Text style={styles.priceLabel}>قیمت کل:</Text>
                         </View>
                     )}
 
                     {/* Cancel Button */}
                     <TouchableOpacity
-                        style={tw`bg-red-500 py-4 rounded-xl shadow-lg mb-6`}
+                        style={styles.cancelButton}
                         activeOpacity={0.8}
                         onPress={() => setIsCancelModalVisible(true)}
                     >
-                        <Text style={tw`text-white font-bold text-center text-base`}>
-                            لغو درخواست
-                        </Text>
+                        <Text style={styles.cancelButtonText}>لغو درخواست</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -405,3 +395,201 @@ export default function RentalReqScreen() {
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#FAFAFA',
+    },
+    centerContent: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+    },
+    loadingText: {
+        color: '#6B7280',
+        marginTop: 16,
+        fontSize: 14,
+    },
+    errorText: {
+        color: '#EF4444',
+        fontSize: 16,
+        fontWeight: '600',
+        marginTop: 16,
+        textAlign: 'center',
+    },
+    backButton: {
+        backgroundColor: '#EAB308',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 12,
+        marginTop: 16,
+    },
+    backButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    header: {
+        backgroundColor: '#ffffff',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    headerSpacer: {
+        width: 24,
+    },
+    headerTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#1F2937',
+    },
+    backIcon: {
+        padding: 4,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    content: {
+        padding: 16,
+        paddingBottom: 32,
+    },
+    statusHeader: {
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+    },
+    statusHeaderTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    dateText: {
+        color: '#6B7280',
+        fontSize: 13,
+    },
+    statusLabel: {
+        fontWeight: '700',
+        fontSize: 15,
+    },
+    workshopText: {
+        color: '#374151',
+        fontSize: 14,
+        textAlign: 'right',
+        marginTop: 8,
+    },
+    workCard: {
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    workCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    workCounter: {
+        color: '#9CA3AF',
+        fontSize: 13,
+    },
+    workType: {
+        color: '#1F2937',
+        fontWeight: '700',
+        fontSize: 16,
+    },
+    detailsContainer: {
+        marginBottom: 8,
+    },
+    detailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F9FAFB',
+    },
+    lastDetailRow: {
+        borderBottomWidth: 0,
+    },
+    detailLabel: {
+        color: '#6B7280',
+        fontSize: 13,
+        marginLeft: 8,
+    },
+    detailValue: {
+        color: '#374151',
+        fontSize: 13,
+    },
+    detailValueMultiline: {
+        color: '#374151',
+        fontSize: 13,
+        flex: 1,
+        textAlign: 'right',
+    },
+    dimensionsContainer: {
+        flexDirection: 'row',
+    },
+    dimensionItem: {
+        color: '#374151',
+        fontSize: 13,
+        marginLeft: 12,
+    },
+    priceCard: {
+        backgroundColor: '#DBEAFE',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#93C5FD',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    priceLabel: {
+        color: '#1E40AF',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    priceValue: {
+        color: '#1E40AF',
+        fontWeight: '700',
+        fontSize: 16,
+    },
+    cancelButton: {
+        backgroundColor: '#EF4444',
+        paddingVertical: 16,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    cancelButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        textAlign: 'center',
+        fontSize: 15,
+    },
+});

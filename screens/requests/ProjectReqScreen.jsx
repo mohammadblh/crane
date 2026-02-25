@@ -101,7 +101,7 @@ export default function ProjectReqScreen() {
         const fields = requestData.fields['1'] || {};
 
         return {
-            workshopName: fields['1211']?.[0] || 'نامشخص',
+            workshopName: fields['1211']?.[1] || 'نامشخص',
             category: fields['1236']?.[1] || '',
             attachments: fields['1213']?.[0] || '',
             description: fields['1221']?.[0] || '',

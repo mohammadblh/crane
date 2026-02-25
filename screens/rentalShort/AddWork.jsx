@@ -47,22 +47,6 @@ export default function AddLoadingScreen({ addWorkName, items, onBack, onSubmit,
                         }}
                     />
 
-                    {/* <DatePickerComponent2
-                        field={{
-                            "sectionId": "time_duration",
-                            "title": "مدت زمان:",
-                            "label": "مدت زمان",
-                            "placeholder": "۱۴۰۴/۰۹/۱۰ تا ۱۴۰۴/۰۹/۲۵",
-                            "type": 7,
-                            "style": 1,
-                            "required": false,
-                            "mode": "range",
-                            "defaultValue": null
-                        }}
-                        value={null}
-                        onChange={(value) => console.log('Selected value:', value)}
-                    /> */}
-
                     {/* Bottom Buttons */}
                     <View style={tw`flex-row justify-between`}>
                         <TouchableOpacity
