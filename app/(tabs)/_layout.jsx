@@ -1,12 +1,22 @@
+import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Platform, View, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as NavigationBar from 'expo-navigation-bar';
+
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 12 : 16);
   const tabBarHeight = 75 + bottomInset;
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      // NavigationBar.setBackgroundColorAsync('dark'); // مشکی
+      NavigationBar.setButtonStyleAsync('dark'); // آیکن‌ها سفید نشن
+    }
+  }, []);
 
   return (
     <Tabs
@@ -15,12 +25,12 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#1F2937',
         tabBarInactiveTintColor: '#78716C',
         tabBarStyle: {
+          // paddingBottom: bottomInset,
+          height: tabBarHeight,
           position: 'absolute',
           backgroundColor: '#FBC02D',
           borderTopWidth: 0,
           elevation: 8,
-          height: tabBarHeight,
-          paddingBottom: bottomInset,
           paddingTop: 10,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,

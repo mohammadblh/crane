@@ -7,10 +7,12 @@ import {
     StatusBar,
     Animated,
     Alert,
+    Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowRight } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import tw from 'tailwind-react-native-classnames';
 import { useNavigation, useRouter, useFocusEffect } from 'expo-router';
 import Loading from '../Loading';
@@ -20,6 +22,9 @@ import { api } from '../../hooks/useApi';
 import RenderForm from '@/components/FormRenderer/RenderForm';
 
 export default function RentalRender({ rental }) {
+    const insets = useSafeAreaInsets();
+    const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 12 : 16);
+
     const [currentStep, setCurrentStep] = useState(1);
     const [nextDisabled, setNextDisabled] = useState(false);
     const [workItems, setWorkItems] = useState([]);
@@ -284,7 +289,7 @@ export default function RentalRender({ rental }) {
 
             {/* دکمه ثابت در پایین صفحه */}
             <View
-                style={tw`fixed flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`}
+                style={[tw`fixed flex flex-row justify-between bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4`, { bottom: bottomInset }]}
             >
                 {currentStep === rental.steps.length ? (
                     <TouchableOpacity
@@ -299,7 +304,7 @@ export default function RentalRender({ rental }) {
                     <TouchableOpacity
                         style={[
                             tw`flex-1 bg-yellow-500 py-3 rounded-lg shadow-lg`,
-                            nextDisabled && tw`bg-gray-300`
+                            nextDisabled && tw`bg-gray-300`,
                         ]}
                         onPress={handleNext}
                         disabled={nextDisabled}
